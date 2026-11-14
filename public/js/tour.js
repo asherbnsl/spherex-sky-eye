@@ -15,7 +15,7 @@ const $ = s => document.querySelector(s);
 function place() {
   const step = STEPS[i];
   const el = $(step.sel);
-  if (!el || !el.offsetParent) { if (i < STEPS.length - 1) { i++; return place(); } return end(); }
+  if (!el || !el.getClientRects().length) { if (i < STEPS.length - 1) { i++; return place(); } return end(); }
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   setTimeout(() => {
     const r = el.getBoundingClientRect(), pad = 6;
