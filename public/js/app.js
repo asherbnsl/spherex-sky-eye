@@ -154,30 +154,50 @@ async function initGlobe() {
     } else if (state.aladinGaia) { state.aladinGaia.hide(); }
   };
 }
-// Cinematic fly: pull back to a wide view, glide across, then dive in
-// (avoids the lag/jump of panning across the sky while zoomed in).
+// Cinematic fly: pull back to a wide view, glide along the great circle, then
+// dive in. Driven by our own timer (Aladin's built-in pan animation stalls and
+// then jumps), so the motion is smooth and always ends exactly on target.
 let flySeq = 0;
+function slerp(a, b, t) {
+  const D = Math.PI / 180;
+  const v = (ra, de) => [Math.cos(de * D) * Math.cos(ra * D), Math.cos(de * D) * Math.sin(ra * D), Math.sin(de * D)];
+  const p = v(...a), q = v(...b);
+  const dot = Math.min(1, Math.max(-1, p[0] * q[0] + p[1] * q[1] + p[2] * q[2]));
+  const w = Math.acos(dot);
+  if (w < 1e-6) return b;
+  const s1 = Math.sin((1 - t) * w) / Math.sin(w), s2 = Math.sin(t * w) / Math.sin(w);
+  const r = [0, 1, 2].map(k => s1 * p[k] + s2 * q[k]);
+  return [((Math.atan2(r[1], r[0]) / D) + 360) % 360, Math.asin(r[2] / Math.hypot(...r)) / D];
+}
 function flyGlobe() {
   const al = state.aladin; if (!al || !state.center || !state.footprint) return;
   clearInterval(state.orbit);
   const seq = ++flySeq;
-  const [ra, dec] = state.center;
-  const finalFov = state.fov / 3600 * 5;
-  const [ra0, dec0] = al.getRaDec ? al.getRaDec() : [ra, dec];
+  const end = state.center, endFov = state.fov / 3600 * 5;
+  const rd = al.getRaDec(), start = [rd[0], rd[1]], startFov = al.getFov()[0];
   const D = Math.PI / 180;
-  const sep = Math.acos(Math.min(1, Math.sin(dec0 * D) * Math.sin(dec * D) + Math.cos(dec0 * D) * Math.cos(dec * D) * Math.cos((ra - ra0) * D))) / D;
-  const zoom = (f, t) => { try { al.zoomToFoV ? al.zoomToFoV(f, t) : al.setFoV(f); } catch { al.setFoV(f); } };
-  const pan = (t, done) => { try { al.animateToRaDec ? al.animateToRaDec(ra, dec, t, done) : (al.gotoRaDec(ra, dec), done && done()); } catch { al.gotoRaDec(ra, dec); done && done(); } };
-  const dive = () => { if (seq === flySeq) zoom(finalFov, 2); };
-  if (sep < 3) { pan(1.2); setTimeout(dive, 400); }
-  else {
-    const wide = Math.min(180, Math.max(60, sep * 1.4));
-    zoom(wide, 1.2);
-    setTimeout(() => { if (seq !== flySeq) return; pan(Math.min(3, 1 + sep / 60)); setTimeout(dive, Math.min(3000, 1000 + sep / 60 * 1000) + 150); }, 1250);
-  }
+  const sep = Math.acos(Math.min(1, Math.sin(start[1] * D) * Math.sin(end[1] * D) + Math.cos(start[1] * D) * Math.cos(end[1] * D) * Math.cos((end[0] - start[0]) * D))) / D;
+  const wide = Math.min(180, Math.max(startFov, endFov, Math.min(160, sep * 1.3 + 10)));
+  const T = sep < 2 ? 1500 : 3600;                 // ms
+  const ease = x => x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+  const lfov = (a, b, t) => Math.exp(Math.log(a) + (Math.log(b) - Math.log(a)) * t);
+  const t0 = performance.now();
+  const stepFn = () => {
+    if (seq !== flySeq) return;
+    const x = Math.min(1, (performance.now() - t0) / T);
+    const pos = slerp(start, end, ease(Math.min(1, Math.max(0, (x - 0.15) / 0.6))));
+    const f = x < 0.35 ? lfov(startFov, wide, ease(x / 0.35)) : lfov(wide, endFov, ease((x - 0.35) / 0.65));
+    al.setFoV(sep < 2 ? lfov(startFov, endFov, ease(x)) : f);
+    al.gotoRaDec(pos[0], pos[1]);
+    if (x < 1) (document.hidden ? setTimeout(stepFn, 33) : requestAnimationFrame(stepFn));
+    else { al.gotoRaDec(end[0], end[1]); al.setFoV(endFov); }
+  };
+  stepFn();
+  // safety net: always land on target even if frames were throttled
+  setTimeout(() => { if (seq === flySeq) { al.gotoRaDec(end[0], end[1]); al.setFoV(endFov); } }, T + 600);
   state.footprint.removeAll();
   const h = state.fov / 2;
-  const corners = [[h, h], [-h, h], [-h, -h], [h, -h]].map(([e, n]) => offsetToWorld(ra, dec, e, n));
+  const corners = [[h, h], [-h, h], [-h, -h], [h, -h]].map(([e, n]) => offsetToWorld(end[0], end[1], e, n));
   state.footprint.add(window.A.polygon(corners, { color: '#ffb000' }));
 }
 
