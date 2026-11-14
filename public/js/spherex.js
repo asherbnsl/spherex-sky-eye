@@ -216,21 +216,39 @@ export async function loadCutout(im, ra, dec, fov, n) {
 
 // Aperture photometry at grid position (cx, cy) — approximate, no aperture
 // correction. Background = the cutout's robust median. Returns mJy and error.
+// Saturated stars (blank core pixels) fall back to PSF-wing photometry: the
+// flux in a ring just outside the saturated core, which still tracks the
+// star's brightness (good for light curves, flagged as relative).
 export function apertureFlux(cut, cx, cy, radiusArcsec = 9) {
   const { data, n, fov, bg, sigma } = cut;
-  const scale = fov / n, rp = radiusArcsec / scale;
-  let s = 0, cnt = 0;
-  for (let j = Math.floor(cy - rp); j <= Math.ceil(cy + rp); j++) for (let i = Math.floor(cx - rp); i <= Math.ceil(cx + rp); i++) {
-    if (i < 0 || j < 0 || i >= n || j >= n) return { flux: NaN, err: NaN };
-    if ((i - cx) ** 2 + (j - cy) ** 2 > rp * rp) continue;
-    const v = data[j * n + i]; if (!Number.isFinite(v)) return { flux: NaN, err: NaN };
-    s += v - bg; cnt++;
-  }
-  // resampled pixels are correlated: noise per native pixel area
+  const scale = fov / n;
   const omega = (scale / 206264.806) ** 2;
-  const nativePix = cnt * (scale / cut.pixScale) ** 2;
-  const errSurf = sigma * Math.sqrt(Math.max(1, nativePix)) * (cut.pixScale / scale) ** 2;
-  return { flux: s * omega * 1e9, err: errSurf * omega * 1e9 };
+  const at = (i, j) => (i < 0 || j < 0 || i >= n || j >= n) ? undefined : data[j * n + i];
+  const ring = (r0, r1) => {
+    let s = 0, cnt = 0, nan = 0, out = false;
+    const R = Math.ceil(r1);
+    for (let j = Math.floor(cy) - R; j <= Math.ceil(cy) + R; j++) for (let i = Math.floor(cx) - R; i <= Math.ceil(cx) + R; i++) {
+      const d2 = (i - cx) ** 2 + (j - cy) ** 2;
+      if (d2 > r1 * r1 || d2 < r0 * r0) continue;
+      const v = at(i, j);
+      if (v === undefined) { out = true; continue; }
+      if (!Number.isFinite(v)) { nan++; continue; }
+      s += v - bg; cnt++;
+    }
+    return { s, cnt, nan, out };
+  };
+  const rp = radiusArcsec / scale;
+  const core = ring(0, rp);
+  if (core.out) return { flux: NaN, err: NaN };
+  const errOf = cnt => sigma * Math.sqrt(Math.max(1, cnt * (scale / cut.pixScale) ** 2)) * (cut.pixScale / scale) ** 2 * omega * 1e9;
+  if (!core.nan) return { flux: core.s * omega * 1e9, err: errOf(core.cnt) };
+  // saturated: find the extent of the blank core, then measure a ring outside it
+  let rN = 0;
+  for (let r = 0; r < 40 / scale; r += 0.5) { const q = ring(r, r + 1); if (q.nan) rN = r + 1; }
+  const r0 = rN + 4 / scale, r1 = rN + 16 / scale;
+  const w = ring(r0, r1);
+  if (w.out || w.cnt < 8) return { flux: NaN, err: NaN };
+  return { flux: w.s * omega * 1e9, err: errOf(w.cnt), saturated: true };
 }
 
 // Stack cutouts into one frame. Each input is normalised by its own noise so

@@ -73,6 +73,18 @@ t('IRSA SIA CSV with unescaped cloud_access JSON keeps earlier columns + S3 mapp
   assert.equal(parseCSV(head + '\n' + row + '\n' + row + '\n').length, 2);
 });
 import { readFileSync } from 'node:fs';
+t('aperture photometry: normal star and saturated-core fallback', () => {
+  const n = 61, c = 30, mk = sat => {
+    const data = new Float32Array(n * n);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const r = Math.hypot(i - c, j - c);
+      data[j * n + i] = (sat && r < 3) ? NaN : 1 + 100 * Math.exp(-r * r / 8);
+    }
+    return { data, n, fov: n * 3, bg: 1, sigma: 1, pixScale: 6.15 };
+  };
+  const a = SX.apertureFlux(mk(false), c, c, 9); assert.ok(a.flux > 0 && !a.saturated);
+  const b = SX.apertureFlux(mk(true), c, c, 9); assert.ok(b.saturated && b.flux > 0, JSON.stringify(b));
+});
 t('snapshot of challenge targets is complete and well-formed', () => {
   const snap = JSON.parse(readFileSync(new URL('../public/data/snapshot.json', import.meta.url)));
   const want = { barnard: 239, epsindib: 345, wise0855: 258, rwaur: 226, rdra: 413 };

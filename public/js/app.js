@@ -506,13 +506,15 @@ async function updateAnalysis() {
     let i = pr.i, j = pr.j, ra, dec;
     if (pr.target) { [ra, dec] = targetAt(c.mjd); [i, j] = worldToGrid(ra, dec); }
     else[ra, dec] = gridToWorld(i, j);
-    const { flux, err } = SX.apertureFlux(c, i, j, 9);
+    const { flux, err, saturated } = SX.apertureFlux(c, i, j, 9);
     let wl = (c.im.wlMin + c.im.wlMax) / 2;
     try { wl = (await SX.wavelengthAt(c.im, ra, dec)).wl; } catch { /* fall back to band centre */ }
-    return { c, flux, err, wl };
+    return { c, flux, err, wl, saturated };
   }));
   if (seq !== analysisSeq) return;
   state.analysisPts = pts;
+  const sat = pts.filter(p => p.saturated).length;
+  if (sat) $('#probe-txt').innerHTML += ` · <span class="warn">saturated in ${sat} exposures — PSF-wing photometry (relative brightness)</span>`;
   drawAnalysis();
 }
 function drawAnalysis() {
