@@ -16,7 +16,8 @@ Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure tha
 | **PASSES / EXPOSURES / DIFF / IR COLOUR / STACK ALL** | Play one frame per survey pass, or every exposure; subtract passes (red = now, blue = before); false-colour composite (D1+D2 / D3+D4 / D5+D6); or add everything for the deepest image. |
 | **Detector stacking (D1–D6)** | Each of SPHEREx's 6 detector arrays covers part of 0.75–5.0 µm. Toggle any combination; exposures are noise-normalised and combined with outlier rejection (removes hot pixels, cosmic rays, streaks). |
 | **Spectra on the fly** | Click a source: aperture photometry on every loaded exposure, each at its exact wavelength from the SPHEREx spectral WCS (linear variable filter), so you see a 0.75–5 µm spectrum per pass. |
-| **Light curves** | Median flux per detector per pass, so variable stars (RW Aur, R Dra) stand out. |
+| **WISE 2010 reference frame** | The flipbook opens with an unWISE 4.6 µm image from the original 2010 WISE mission, giving a ~15-year baseline like WiseView. Barnard's Star jumps 2.7′; WISE 0855 about 2′. |
+| **Light curves** | Median flux per detector per pass, so variable stars (RW Aur, R Dra) stand out. Saturated bright stars switch to PSF-wing photometry (flagged as relative). |
 | **User-chosen field of view** | 2′–15′. Bigger fields track faster movers but download more (the estimate is shown in the log). |
 | **Gaia DR3 overlay with proper motion** | Every Gaia source is moved to each frame's date, and fast movers (>0.2″/yr) are flagged red with motion vectors. |
 | **AllWISE overlay** | Where things were around 2010, for a ~15-year motion baseline. |
@@ -46,13 +47,15 @@ browser ──────────────▶ CDS Sesame (names), CDS Hi
 * **Astrometry in the browser:** full TAN-SIP world coordinate system with Newton-refined inverse, then bilinear resampling onto a fixed gnomonic grid.
 * **Wavelength per pixel:** read from each detector's `WCS-WAVE` lookup table (cached per detector).
 * **Survey passes:** exposures are clustered by time gaps of more than 30 days; SPHEREx maps the whole sky every ~6 months.
+* **Resilience:** the archive search is retried, cached at the CDN edge (served stale if IRSA is down), and the five challenge targets also ship with a saved archive listing (`public/data/snapshot.json`, taken 2026-11-14) as a last-resort fallback. All-sky globe layers are probed at start-up and switch to working mirrors automatically (CDS, ESA ESASky, CSIRO).
+* **Validated:** WISE 0855−0714, the coldest known brown dwarf, is detected at S/N 10–14 in each SPHEREx pass exactly at its proper-motion-predicted position.
 * Plain ES modules with no build step and no framework. Three small serverless functions for the proxy.
 
 ## Run it
 
 ```bash
 node server.mjs          # http://localhost:8080   (Node 18+)
-npm test                 # 12 unit tests: WCS, coordinate parsing, FITS cards, stacking, wavelength lookup
+npm test                 # 16 unit tests: WCS, coordinate parsing, FITS cards, CSV quirks, stacking, photometry, wavelength lookup, snapshot
 ```
 
 Deploy: import the repo into Vercel (framework preset "Other"). `public/` is served statically and `api/*.js` become serverless functions.
@@ -67,6 +70,8 @@ public/js/app.js         controller: search, download, flipbook, overlays, analy
 public/js/spherex.js     archive search, range-read cutouts, reprojection, stacking, photometry
 public/js/fits.js        minimal FITS header/HDU reader over HTTP Range
 public/js/wcs.js         TAN-SIP WCS
+public/js/wise.js        WISE 2010 reference frame (unWISE cutouts)
+public/data/snapshot.json saved archive listing for the 5 challenge targets (fallback)
 public/js/render.js      stretches and colour maps
 public/js/charts.js      spectrum / light-curve charts
 api/sia.js               proxy: IRSA SIA → compact JSON
@@ -83,14 +88,16 @@ test/run.mjs             unit tests
 * IRSA SPHEREx tutorial notebooks: FITS structure, cutouts, spectral WCS.
 * WiseView (byw.tools/wiseview): inspiration for the flipbook concept.
 * AllWISE Source Catalog (NASA WISE mission, via IRSA TAP) and AllWISE / unWISE HiPS maps.
+* unWISE coadds of NASA WISE data (Lang 2014; Meisner, Lang & Schlegel 2017), via the unwise.me cutout service, used for the WISE 2010 frame.
 
 **Space agency partner data**
 * ESA Gaia DR3 (`gaiadr3.gaia_source`, ESA Gaia Archive TAP). Gaia DR3 is also linked from the challenge via MAST.
+* ESA ESASky HiPS mirrors (AllWISE, 2MASS colour) for the sky globe.
 
 **Other resources**
 * SPHEREx QR2 all-sky HiPS maps (D1–D6 and colour) produced and hosted by CDS Strasbourg (ODbL).
 * Aladin Lite v3 (CDS Strasbourg), CDS Sesame name resolver.
-* 2MASS and DSS2 HiPS (via CDS).
+* 2MASS and DSS2 HiPS (via CDS, ESA ESASky and CSIRO CASDA mirrors).
 * Fonts: JetBrains Mono, Orbitron (Google Fonts, OFL).
 * UI design language (tactical HUD, sensor "looks", event log, shareable view links) inspired by **God's Eye View** by Bilawal Sidhu (MIT License, https://github.com/bilawalsidhu/gods-eye-view). No code from that project is included.
 
