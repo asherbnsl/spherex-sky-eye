@@ -370,7 +370,9 @@ function drawOverlay(f) {
     for (const w of state.allwise) { const [x, y] = P(w.ra, w.dec); if (x < 0 || y < 0 || x > W || y > W) continue; ctx.strokeRect(x - 5, y - 5, 10, 10); }
   }
   if (state.ov.gaia || state.ov.movers) {
-    for (const g of state.gaia) {
+    // brightest 150 stars (list is sorted by magnitude) plus every fast mover
+    const shown = state.gaia.filter((g, k) => k < 150 || Math.hypot(g.pmra, g.pmdec) > 200);
+    for (const g of shown) {
       const pm = Math.hypot(g.pmra, g.pmdec);
       const fast = pm > 200;
       if (!state.ov.gaia && !(fast && state.ov.movers)) continue;
