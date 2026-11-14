@@ -2,6 +2,9 @@
 
 > Everything must stay in English. Test every link in a private/incognito window before submitting.
 
+## Challenge
+Planet X and SPHEREx
+
 ## Project Name
 BLINKSCOPE — Blink the infrared sky. Catch what moves.
 

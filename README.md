@@ -1,6 +1,6 @@
 # BLINKSCOPE — blink the infrared sky, catch what moves
 
-**Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
+**Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: **Planet X and SPHEREx**, *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
 
 **Live:** https://spherex-sky-eye.vercel.app · **Demo deck:** [docs/demo/BLINKSCOPE_demo.pdf](docs/demo/BLINKSCOPE_demo.pdf)
 

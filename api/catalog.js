@@ -2,9 +2,10 @@
 // Cone search of reference catalogues used as overlays:
 //   gaia    -> ESA Gaia DR3 (positions at epoch 2016.0 + proper motions)
 //   allwise -> NASA AllWISE (IRSA, mean epoch ~2010.5)
-import { getQuery, send, num, parseCSV, fetchText } from './_lib.js';
+import { rateLimited, getQuery, send, num, parseCSV, fetchText } from './_lib.js';
 
 export default async function handler(req, res) {
+  if (rateLimited(req, res)) return;
   let vizErr = null;
   try {
     const q = getQuery(req);

@@ -3,6 +3,20 @@
 // cannot call them directly; these functions forward a fixed, whitelisted
 // query and return compact JSON.
 
+// Simple per-IP rate limit (per serverless instance): protects the upstream
+// archives and our function quota from abuse. 90 requests / minute / IP.
+const hits = new Map();
+export function rateLimited(req, res, limit = 90) {
+  const ip = String(req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'x').split(',')[0].trim();
+  const now = Date.now();
+  const h = hits.get(ip) || { n: 0, t: now };
+  if (now - h.t > 60000) { h.n = 0; h.t = now; }
+  h.n++; hits.set(ip, h);
+  if (hits.size > 5000) hits.clear();
+  if (h.n > limit) { res.setHeader('Retry-After', '60'); send(res, 429, { error: 'Too many requests — slow down a little' }); return true; }
+  return false;
+}
+
 export function getQuery(req) {
   if (req.query && Object.keys(req.query).length) return req.query;
   const u = new URL(req.url, 'http://x');
@@ -13,6 +27,7 @@ export function send(res, status, obj, maxAge = 3600) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   // long CDN caching + serve-stale-on-error keeps tested targets working even
   // when the upstream archive is briefly down
   if (status === 200) res.setHeader('Cache-Control', `public, max-age=300, s-maxage=${maxAge}, stale-while-revalidate=604800, stale-if-error=604800`);

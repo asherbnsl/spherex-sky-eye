@@ -1,8 +1,9 @@
 // GET /api/resolve?name=Barnard's Star
 // Name -> J2000 position + proper motion, via the CDS Sesame name resolver.
-import { getQuery, send, fetchText } from './_lib.js';
+import { rateLimited, getQuery, send, fetchText } from './_lib.js';
 
 export default async function handler(req, res) {
+  if (rateLimited(req, res)) return;
   try {
     const name = String(getQuery(req).name || '').slice(0, 120);
     if (!name.trim()) throw new Error('missing name');

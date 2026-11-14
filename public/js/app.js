@@ -23,11 +23,14 @@ const state = {
 };
 
 // ---------------------------------------------------------------- utilities
+// escape text before it goes into innerHTML (names and URLs can come from users or remote services)
+const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const safeUrl = u => /^https:\/\//.test(u || '') ? esc(u) : '#';
 function log(msg, cls = '') {
   const el = document.createElement('div');
   if (cls) el.className = cls;
   const t = new Date().toTimeString().slice(0, 8);
-  el.innerHTML = `<b>[${t}]</b> ${msg}`;
+  el.innerHTML = `<b>[${t}]</b> ${esc(msg)}`;
   const box = $('#log-lines');
   box.prepend(el);
   while (box.children.length > 40) box.lastChild.remove();
@@ -548,7 +551,7 @@ function renderMeta() {
     const fl = keys.map(k => c.flagCounts['L2 N_' + k] || 0);
     const total = fl.reduce((a, b) => a + b, 0);
     const pct = total / (2040 * 2040) * 100;
-    return `<tr><td>${(c.dateObs || fmtDate(c.mjd)).replace('T', ' ').slice(0, 16)}</td><td>D${c.im.det}</td><td>${c.im.wlMin.toFixed(2)}–${c.im.wlMax.toFixed(2)}</td><td>${c.im.exp.toFixed(0)}s</td><td class="${pct > 2 ? 'warn' : ''}">${pct.toFixed(2)}%</td><td title="${keys.map((k, i) => `${k}: ${fl[i]}`).join('\n')}">${keys.filter((k, i) => fl[i] > 20000).join(' ') || '—'}</td><td><a href="${c.im.url}" target="_blank" rel="noopener">${c.im.obs}</a></td></tr>`;
+    return `<tr><td>${esc((c.dateObs || fmtDate(c.mjd)).replace('T', ' ').slice(0, 16))}</td><td>D${c.im.det}</td><td>${c.im.wlMin.toFixed(2)}–${c.im.wlMax.toFixed(2)}</td><td>${c.im.exp.toFixed(0)}s</td><td class="${pct > 2 ? 'warn' : ''}">${pct.toFixed(2)}%</td><td title="${keys.map((k, i) => `${k}: ${fl[i]}`).join('\n')}">${keys.filter((k, i) => fl[i] > 20000).join(' ') || '—'}</td><td><a href="${safeUrl(c.im.url)}" target="_blank" rel="noopener noreferrer">${esc(c.im.obs)}</a></td></tr>`;
   }).join('');
   $('#meta').innerHTML = `<table><tr><th>UTC</th><th>det</th><th>µm</th><th>exp</th><th title="Share of the detector flagged for contamination (header counts)">flagged</th><th>main flags</th><th>IRSA file</th></tr>${rows}</table>
   <div class="muted" style="margin-top:4px">Flag shares come from each exposure's FLAGS summary (whole detector). Hover for counts. Files open from NASA/IPAC IRSA.</div>`;

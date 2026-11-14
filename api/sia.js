@@ -1,13 +1,14 @@
 // GET /api/sia?ra=..&dec=..&collections=spherex_dr1
 // Lists every SPHEREx spectral image covering a sky position (IRSA SIA v2),
 // returned as compact JSON with direct links to NASA's AWS copy of each file.
-import { getQuery, send, num, parseCSV, fetchText } from './_lib.js';
+import { rateLimited, getQuery, send, num, parseCSV, fetchText } from './_lib.js';
 
 const ALLOWED = /^spherex_[a-z0-9_]+$/;
 const IRSA_PREFIX = 'https://irsa.ipac.caltech.edu/ibe/data/spherex/';
 export const toS3 = url => url && url.startsWith(IRSA_PREFIX) ? 'https://nasa-irsa-spherex.s3.amazonaws.com/' + url.slice(IRSA_PREFIX.length) : null;
 
 export default async function handler(req, res) {
+  if (rateLimited(req, res)) return;
   try {
     const q = getQuery(req);
     const ra = num(q.ra, 0, 360), dec = num(q.dec, -90, 90);
