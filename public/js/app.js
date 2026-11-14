@@ -136,7 +136,7 @@ async function initGlobe() {
     survey: layers[first].url, fov: 200, projection: 'SIN', cooFrame: 'ICRSd',
     showReticle: true, reticleColor: '#00e5ff', showLayersControl: false, showGotoControl: false,
     showFullscreenControl: false, showShareControl: false, showFrame: false, showZoomControl: false,
-    showSimbadPointerControl: false, showProjectionControl: false, showCooGridControl: false, showContextMenu: true,
+    showSimbadPointerControl: false, showProjectionControl: false, showCooGridControl: false, showContextMenu: true, showCooLocation: false, showFov: false, showStatusBar: false, showSettingsControl: false,
     target: '266.4 -29.0',
   });
   state.footprint = A.graphicOverlay({ color: '#ffb000', lineWidth: 2 });

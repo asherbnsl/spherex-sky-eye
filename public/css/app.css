@@ -138,3 +138,9 @@ body.simple #left { bottom: 10px; }
 #tour-text b { color: var(--green); }
 .tour-nav { display: flex; gap: 6px; margin-top: 12px; align-items: center; }
 .tour-nav span { flex: 1; }
+
+/* hide the sky-globe library's own widgets (we have our own search, FOV and
+   credits); the CDS Aladin Lite credit stays in the footer */
+#sky .aladin-location, #sky .aladin-fov, #sky .aladin-logo-container,
+#sky .aladin-status-bar, #sky .aladin-tooltip-container, #sky .aladin-stack-control,
+#sky .aladin-settings-control, #sky .aladin-share-control { display: none !important; }
