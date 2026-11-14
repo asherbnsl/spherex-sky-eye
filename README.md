@@ -2,7 +2,9 @@
 
 **Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: **Planet X and SPHEREx**, *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
 
-**Live:** https://spherex-sky-eye.vercel.app · **Demo video (27 s):** [docs/demo/BLINKSCOPE_demo_30s.mp4](docs/demo/BLINKSCOPE_demo_30s.mp4) · **Deck:** [docs/demo/BLINKSCOPE_demo.pdf](docs/demo/BLINKSCOPE_demo.pdf)
+### ▶ Try it: **https://spherex-sky-eye.vercel.app**
+
+Opens on Barnard's Star with a 30-second guided tour. No install, no login.
 
 Pluto was found in 1930 by flipping between two photographs of the same patch of sky on a *blink comparator* and noticing one dot that moved. BLINKSCOPE does the same thing with NASA's SPHEREx all-sky infrared survey, in a browser, for any position you type.
 
@@ -14,6 +16,9 @@ Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure tha
 
 | Feature | How |
 |---|---|
+| **Guided tour** | A 7-step spotlight tour starts on the first visit (replay with ▶ TOUR) and walks through search, flipbook, modes, spectra and flagging. |
+| **SIMPLE / PRO modes** | Opens in SIMPLE mode (flipbook, PASSES / DIFF / IR COLOUR, detectors, spectrum). PRO MODE adds every control: exposure-by-exposure playback, contrast, colour looks, catalogues, contamination flags, frame data, event log. |
+| **3D sky globe with smooth flight** | Picking a target flies the globe there: zoom out, glide along the great circle, dive in. |
 | **Flipbook of any sky position** | RA/Dec (decimal or sexagesimal) or any object name (CDS Sesame). Frames are aligned on a fixed sky grid, so moving sources visibly jump. |
 | **PASSES / EXPOSURES / DIFF / IR COLOUR / STACK ALL** | Play one frame per survey pass, or every exposure; subtract passes (red = now, blue = before); false-colour composite (D1+D2 / D3+D4 / D5+D6); or add everything for the deepest image. |
 | **Detector stacking (D1–D6)** | Each of SPHEREx's 6 detector arrays covers part of 0.75–5.0 µm. Toggle any combination; exposures are noise-normalised and combined with outlier rejection (removes hot pixels, cosmic rays, streaks). |
@@ -23,7 +28,7 @@ Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure tha
 | **User-chosen field of view** | 2′–15′. Bigger fields track faster movers but download more (the estimate is shown in the log). |
 | **Gaia DR3 overlay with proper motion** | Every Gaia source is moved to each frame's date, and fast movers (>0.2″/yr) are flagged red with motion vectors. |
 | **AllWISE overlay** | Where things were around 2010, for a ~15-year motion baseline. |
-| **3D sky globe** | Aladin Lite in orthographic (globe) projection with the SPHEREx all-sky maps (colour + D1–D6), AllWISE, unWISE, 2MASS and DSS layers. |
+| **Sky layers** | Aladin Lite in orthographic (globe) projection with the SPHEREx all-sky maps (colour + D1–D6), AllWISE, 2MASS and DSS layers; unreachable map servers are skipped automatically. |
 | **Per-pixel contamination flags** | Toggle *contamination*: the FLAGS extension (RICE-compressed) is decoded in the browser, flagged pixels (ghosts, crosstalk, persistence, hot pixels, streaks...) are drawn in red and left out of the stacks. |
 | **Flag a mover** | ⚑ FLAG files a pre-filled public GitHub issue with the position and a link back to the view, so anyone can review candidates. |
 | **GIF export** | Save the whole flipbook as an animated GIF to share. |
@@ -33,7 +38,7 @@ Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure tha
 
 ### Challenge test targets (one-click chips)
 
-Barnard's Star · Epsilon Indi B · WISE 0855−0714 · RW Aurigae · R Draconis. Names are resolved live, with proper motion, and the target's predicted track across the passes is drawn on the flipbook.
+Barnard's Star · Epsilon Indi B · WISE 0855−0714 · RW Aurigae · R Draconis, plus a bonus: Luhman 16, the closest brown-dwarf pair to the Sun, itself found by blinking WISE images. Names are resolved live, with proper motion, and the target's predicted track across the passes is drawn on the flipbook.
 
 ---
 
@@ -79,6 +84,7 @@ public/js/wcs.js         TAN-SIP WCS
 public/js/rice.js        RICE_1 decoder for the compressed FLAGS images
 public/js/gif.js         animated GIF encoder
 public/js/wise.js        WISE 2010 reference frame (unWISE cutouts)
+public/js/tour.js        guided tour
 public/data/snapshot.json saved archive listing for the 5 challenge targets (fallback)
 public/js/render.js      stretches and colour maps
 public/js/charts.js      spectrum / light-curve charts
@@ -89,10 +95,14 @@ server.mjs               local server (static + API)
 test/run.mjs             unit tests
 ```
 
+## Team
+
+**Team Shrapnel**: Arsh Bansal ([@asherbnsl](https://github.com/asherbnsl)).
+
 ## Data, resources and tools used
 
 **NASA data and resources**
-* SPHEREx spectral images (Level 2, DR1) — NASA/IPAC Infrared Science Archive (IRSA) SIA service and NASA AWS Open Data bucket `nasa-irsa-spherex`.
+* SPHEREx spectral images (Level 2, DR1 and the newest Quick Release QR3) — NASA/IPAC Infrared Science Archive (IRSA) SIA service and NASA AWS Open Data bucket `nasa-irsa-spherex`.
 * IRSA SPHEREx tutorial notebooks: FITS structure, cutouts, spectral WCS.
 * WiseView (byw.tools/wiseview): inspiration for the flipbook concept.
 * AllWISE Source Catalog (NASA WISE mission, via IRSA TAP) and AllWISE / unWISE HiPS maps.
@@ -111,7 +121,7 @@ test/run.mjs             unit tests
 
 ## AI assistance (disclosure)
 
-The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the demo deck and video from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. The demo video was assembled with AI assistance from real screenshots of the app and carries a visible "Assembled with AI assistance" watermark; no AI-generated imagery or audio is used, and every sky image is real NASA/ESA data.
+The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the backup slide deck from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. No AI-generated imagery, video or audio is used; every sky image is real NASA/ESA data.
 
 ## Licence
 
