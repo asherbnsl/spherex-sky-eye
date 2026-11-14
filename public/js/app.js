@@ -208,8 +208,12 @@ function estimateBytes() {
 async function download(token) {
   const dets = [1, 2, 3, 4, 5, 6]; // fetch all detectors; display filter is instant
   const wanted = state.mode === 'rgb' ? dets : [...state.dets];
+  state.inflight ||= new Set();
+  if (state.inflightToken !== token) { state.inflight = new Set(); state.inflightToken = token; }
   const plan = SX.planDownloads(state.epochs, wanted, state.quality)
-    .filter(im => !state.cuts.some(c => c.im.id === im.id));
+    .filter(im => !state.inflight.has(im.id) && !state.cuts.some(c => c.im.id === im.id));
+  plan.forEach(im => state.inflight.add(im.id));
+  if (!plan.length) return;
   const est = plan.length * estimateBytes() / 1e6;
   log(`AWS ▸ reading ${plan.length} patches (~${est.toFixed(0)} MB) from s3://nasa-irsa-spherex`);
   let done = 0, failed = 0;
@@ -221,7 +225,7 @@ async function download(token) {
       const cut = await SX.loadCutout(im, state.center[0], state.center[1], state.fov, state.n);
       if (token !== state.token) return;
       if (cut) { state.cuts.push(cut); scheduleRebuild(); }
-    } catch (e) { failed++; if (failed < 4) log(`skip ${im.obs} D${im.det}: ${e.message}`, 'err'); }
+    } catch (e) { failed++; state.inflight.delete(im.id); if (failed < 4) log(`skip ${im.obs} D${im.det}: ${e.message}`, 'err'); }
     done++;
     setProgress(0.05 + 0.95 * done / plan.length, `downloading ${done}/${plan.length}`);
   });

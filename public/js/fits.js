@@ -43,7 +43,7 @@ export class RangeFile {
     this.fetch = fetchImpl;
     this.cache = new Map();
   }
-  async read(start, length) {
+  async read(start, length, { cache = true } = {}) {
     const key = start + ':' + length;
     if (this.cache.has(key)) return this.cache.get(key);
     const p = (async () => {
@@ -60,8 +60,7 @@ export class RangeFile {
         }
       }
     })();
-    this.cache.set(key, p);
-    p.catch(() => this.cache.delete(key));
+    if (cache) { this.cache.set(key, p); p.catch(() => this.cache.delete(key)); }
     return p;
   }
   // Read a header starting at byte `offset`. Returns cards + byte offset of data start.

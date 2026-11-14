@@ -38,7 +38,7 @@ export const CONFIG = {
   presets: [
     { key: 'barnard', label: "Barnard's Star", query: "Barnard's Star", fov: 360, dets: [1, 2, 3, 4, 5, 6], note: 'Fastest-moving star in the sky (10.4″/yr)',
       fallback: { ra: 269.4520770, dec: 4.6933650, pmra: -801.551, pmdec: 10362.394, epoch: 2000 } },
-    { key: 'epsindib', label: 'Epsilon Indi B', query: 'eps Indi B', fov: 420, dets: [3, 4, 5, 6], note: 'Pair of brown dwarfs orbiting ε Indi A',
+    { key: 'epsindib', label: 'Epsilon Indi B', query: 'eps Indi B', fov: 300, dets: [2, 5, 6], note: 'Pair of brown dwarfs orbiting ε Indi A',
       fallback: { ra: 331.0441466, dec: -56.7828442, pmra: 3981.977, pmdec: -2466.832, epoch: 2000 } },
     { key: 'wise0855', label: 'WISE 0855−0714', query: 'WISE J085510.83-071442.5', fov: 360, dets: [5, 6], note: 'Coldest known brown dwarf; 8.1″/yr',
       fallback: { ra: 133.8189083, dec: -7.247048, pmra: -8123.7, pmdec: 673.2, epoch: 2000 } },

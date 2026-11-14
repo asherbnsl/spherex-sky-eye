@@ -139,7 +139,7 @@ export async function loadCutout(im, ra, dec, fov, n) {
   const r = fov / 2 / wcs.pixScale * 1.42 + 3;
   const y0 = Math.max(1, Math.floor(py - r)), y1 = Math.min(NX, Math.ceil(py + r));
   const f = rfile(im.s3);
-  const buf = await f.read(img.dataStart + (y0 - 1) * NX * 4, (y1 - y0 + 1) * NX * 4);
+  const buf = await f.read(img.dataStart + (y0 - 1) * NX * 4, (y1 - y0 + 1) * NX * 4, { cache: false });
   const raw = bigEndianFloat32(buf);
   const out = new Float32Array(n * n);
   const scale = fov / n, c = (n - 1) / 2;
