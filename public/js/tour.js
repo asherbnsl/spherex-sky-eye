@@ -38,7 +38,7 @@ function place() {
 }
 function end() {
   $('#tour').classList.add('hidden');
-  try { localStorage.setItem('blinkscope.toured', '1'); } catch { /* storage unavailable */ }
+  try { localStorage.setItem('blinkscope.toured.v2', '1'); } catch { /* storage unavailable */ }
 }
 export function startTour() {
   i = 0;
@@ -47,7 +47,7 @@ export function startTour() {
   place();
 }
 export function hasToured() {
-  try { return localStorage.getItem('blinkscope.toured') === '1'; } catch { return false; }
+  try { return localStorage.getItem('blinkscope.toured.v2') === '1'; } catch { return false; }
 }
 export function wireTour() {
   $('#tour-next').onclick = () => { if (i < STEPS.length - 1) { i++; place(); } else end(); };
