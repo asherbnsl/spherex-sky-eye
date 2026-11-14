@@ -4,6 +4,7 @@
 import { RangeFile, parseCards, dataSize, findHDU, bigEndianFloat32, parseBinTableRow } from './fits.js';
 import { TanSip, offsetToWorld } from './wcs.js';
 import { CONFIG } from './config.js';
+import { readCompressedRows } from './rice.js';
 
 const NX = 2040;
 const files = new Map();
@@ -206,7 +207,7 @@ export async function loadCutout(im, ra, dec, fov, n) {
   const st = robustStats(out);
   const c2 = img.cards;
   return {
-    im, data: out, n, fov, ...st, px, py,
+    im, data: out, n, fov, ...st, px, py, rows: [y0, y1], center: [ra, dec],
     mjd: c2['MJD-AVG'] ?? im.t,
     dateObs: c2['DATE-AVG'] || c2['DATE-OBS'],
     pixScale: wcs.pixScale,
@@ -261,7 +262,7 @@ export function stack(cuts) {
   const vals = new Float32Array(N);
   for (let k = 0; k < n * n; k++) {
     let m = 0;
-    for (const c of cuts) { const v = c.data[k]; if (Number.isFinite(v)) vals[m++] = (v - c.bg) / c.sigma; }
+    for (const c of cuts) { const v = c.data[k]; if (Number.isFinite(v) && !(c.flagMask && c.flagMask[k])) vals[m++] = (v - c.bg) / c.sigma; }
     if (!m) { out[k] = NaN; continue; }
     if (m >= 3) {
       const sorted = vals.slice(0, m).sort();
@@ -307,4 +308,33 @@ export function smooth(data, n) {
     out[j * n + i] = w ? s / w * Math.sqrt(w / 16 * 16 / 4) : NaN;
   }
   return out;
+}
+
+// Contamination bits (see SPHEREx FLAGS definitions): transient, non-functional,
+// hot, persistence, outlier, crosstalk, ghosts, streak, bloom, snowball, halo.
+// (SOURCE, bit 21, just marks known stars and is not contamination.)
+export const CONTAM_BITS = [0, 6, 10, 17, 19, 20, 22, 23, 24, 25, 26, 27, 28];
+const CONTAM_MASK = CONTAM_BITS.reduce((m, b) => m | (1 << b), 0);
+
+// Per-pixel contamination mask for a loaded cutout, on the same grid.
+export async function loadFlagMask(cut) {
+  if (cut.flagMask) return cut.flagMask;
+  const img = await openImage(cut.im.s3);
+  const f = rfile(cut.im.s3);
+  const h = await f.header(img.dataStart + dataSize(img.cards));
+  if ((h.cards.EXTNAME || '').trim() !== 'FLAGS') throw new Error('FLAGS HDU not found');
+  const [y0, y1] = cut.rows;
+  const rows = await readCompressedRows(f, h, y0, y1);
+  const { n, fov } = cut, [ra, dec] = cut.center;
+  const scale = fov / n, c = (n - 1) / 2;
+  const mask = new Uint8Array(n * n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const [wr, wd] = offsetToWorld(ra, dec, (c - i) * scale, (c - j) * scale);
+    const [x, y] = img.wcs.worldToPix(wr, wd);
+    const xi = Math.round(x), yi = Math.round(y);
+    if (xi < 1 || xi > NX || yi < y0 || yi > y1) continue;
+    if (rows[(yi - y0) * NX + (xi - 1)] & CONTAM_MASK) mask[j * n + i] = 1;
+  }
+  cut.flagMask = mask;
+  return mask;
 }

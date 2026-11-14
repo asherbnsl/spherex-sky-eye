@@ -7,7 +7,7 @@
 export const CONFIG = {
   appName: 'BLINKSCOPE',           // project name
   apiBase: '',                     // '' = same origin (Vercel or server.mjs)
-  collections: ['spherex_dr1'],    // IRSA SIA collections to search
+  collections: ['spherex_dr1', 'spherex_qr3'], // IRSA SIA collections: DR1 + newest weekly Quick Release
   pixelScale: 6.15,                // SPHEREx native pixel size, arcsec
   concurrency: 6,                  // parallel range requests to AWS
   aladinModule: 'https://cdn.jsdelivr.net/npm/aladin-lite@3.8.2/dist/aladin.js',
@@ -48,5 +48,8 @@ export const CONFIG = {
       fallback: { ra: 76.9565260, dec: 30.4014382, pmra: 7.23, pmdec: -20.33, epoch: 2000 } },
     { key: 'rdra', label: 'R Draconis', query: 'R Dra', fov: 300, dets: [1, 2, 3, 4, 5, 6], note: 'Mira variable (~246-day cycle)',
       fallback: { ra: 248.1676108, dec: 66.7549794, pmra: -20.643, pmdec: 6.149, epoch: 2000 } },
+    // bonus (not required by the challenge)
+    { key: 'luhman16', label: 'Luhman 16 (bonus)', query: 'Luhman 16', fov: 300, dets: [2, 5, 6], bonus: true, note: 'Closest brown-dwarf pair to the Sun (6.5 ly), found by blinking WISE images',
+      fallback: { ra: 162.3283, dec: -53.3193, pmra: -2762, pmdec: 358, epoch: 2000 } },
   ],
 };

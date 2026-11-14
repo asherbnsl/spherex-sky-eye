@@ -94,4 +94,18 @@ t('snapshot of challenge targets is complete and well-formed', () => {
   assert.equal(`dr1/level2/${week}/l2b${ver}/${det}/level2_${obs}D${det}_spx_l2b${ver}.fits`, 'dr1/level2/2025W33_2C/l2b-v27-2026-228/6/level2_2025W33_2C_0321_1D6_spx_l2b-v27-2026-228.fits');
   assert.ok(Math.abs(tt - 60902.86472) < 1e-4);
 });
+const { RangeFile, findHDU } = await import('../public/js/fits.js');
+const { readCompressedRows } = await import('../public/js/rice.js');
+{
+  const buf = readFileSync(new URL('./fixtures/rice.fits', import.meta.url));
+  const fake = async (u, { headers }) => { const [a, b] = headers.Range.slice(6).split('-').map(Number); const s = buf.subarray(a, Math.min(b + 1, buf.length)); return { status: 206, arrayBuffer: async () => s.buffer.slice(s.byteOffset, s.byteOffset + s.length) }; };
+  const f = new RangeFile('x', fake), h = await findHDU(f, 'FLAGS', 0);
+  const npy = readFileSync(new URL('./fixtures/rice.npy', import.meta.url)); const hl = npy.readUInt16LE(8);
+  const truth = new Int32Array(npy.buffer.slice(npy.byteOffset + 10 + hl, npy.byteOffset + npy.length));
+  const all = await readCompressedRows(f, h, 1, 40), part = await readCompressedRows(f, h, 6, 13);
+  t('RICE_1 flags decoder matches astropy (all rows + partial range)', () => {
+    assert.ok(all.every((v, i) => v === truth[i]));
+    assert.ok(part.every((v, i) => v === truth[5 * 300 + i]));
+  });
+}
 console.log(`\n${n} tests passed`);

@@ -6,6 +6,7 @@ import { scatterChart } from './charts.js';
 import { offsetToWorld, worldToOffset } from './wcs.js';
 import { parseCoords } from './coords.js';
 import { loadWiseFrame } from './wise.js';
+import { encodeGif } from './gif.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -18,7 +19,7 @@ const state = {
   images: [], epochs: [], cuts: [], frames: [], frameIdx: 0,
   playing: true, fps: 2, mode: 'epochs', dets: new Set([1, 2, 3, 4, 5, 6]),
   look: 'ironbow', lo: -1, hi: 20, autoHi: true, quality: 6,
-  ov: { target: true, gaia: true, wise: false, movers: true, wiseFrame: true },
+  ov: { target: true, gaia: true, wise: false, movers: true, wiseFrame: true, flags: false },
   gaia: [], allwise: [], probe: null, token: 0, aladin: null,
 };
 
@@ -255,6 +256,7 @@ async function download(token) {
   const secs = ((performance.now() - t0) / 1000).toFixed(1);
   setProgress(1, `${state.cuts.length} exposures loaded in ${secs}s${failed ? ` · ${failed} failed` : ''}`);
   log(`READY ▸ ${state.cuts.length} exposures in ${secs}s`, 'ok');
+  if (state.ov.flags) loadFlags(token);
   if (!state.probe) setProbe(null);
 }
 
@@ -273,6 +275,19 @@ async function loadCatalogs(token) {
       })
       .catch(e => log(`${cat} overlay unavailable (${e.message})`, 'err'));
   }
+}
+
+async function loadFlags(token) {
+  const todo = state.cuts.filter(c => !c.flagMask);
+  if (!todo.length) { buildFrames(); return; }
+  log(`AWS ▸ reading per-pixel contamination flags for ${todo.length} exposures`);
+  let n = 0, bad = 0;
+  await pool(todo, CONFIG.concurrency, async c => {
+    try { await SX.loadFlagMask(c); n++; } catch (e) { bad++; }
+  });
+  if (token !== state.token) return;
+  log(`FLAGS ▸ ${n} masks loaded${bad ? `, ${bad} failed` : ''} · flagged pixels excluded from stacks`, 'ok');
+  buildFrames();
 }
 
 // ---------------------------------------------------------------- frames
@@ -368,6 +383,14 @@ function drawOverlay(f) {
   const year = SX.mjdToYear(f.mjd);
   ctx.lineWidth = 1.2; ctx.font = '10px "JetBrains Mono", monospace';
 
+  if (state.ov.flags && f.cuts && f.cuts.length) {
+    ctx.fillStyle = 'rgba(255,59,92,0.45)';
+    const n = state.n;
+    for (let k = 0; k < n * n; k++) {
+      if (!f.cuts.some(c => c.flagMask && c.flagMask[k])) continue;
+      ctx.fillRect((k % n) * s, Math.floor(k / n) * s, s + 0.5, s + 0.5);
+    }
+  }
   if (state.ov.wise) {
     ctx.strokeStyle = 'rgba(255,176,0,0.8)';
     for (const w of state.allwise) { const [x, y] = P(w.ra, w.dec); if (x < 0 || y < 0 || x > W || y > W) continue; ctx.strokeRect(x - 5, y - 5, 10, 10); }
@@ -570,7 +593,7 @@ function wire() {
   const pre = $('#presets');
   for (const p of CONFIG.presets) {
     const b = document.createElement('button');
-    b.innerHTML = `<b>◎</b> ${p.label}`; b.title = p.note;
+    b.innerHTML = `<b>◎</b> ${esc(p.label)}`; b.title = p.note; if (p.bonus) b.classList.add('bonus');
     b.onclick = () => { $('#q').value = p.label; engage({ name: p.key }); };
     pre.appendChild(b);
   }
@@ -592,6 +615,7 @@ function wire() {
   $('#o-wise').onchange = e => { state.ov.wise = e.target.checked; draw(); };
   $('#o-movers').onchange = e => { state.ov.movers = e.target.checked; draw(); };
   $('#o-wiseframe').onchange = e => { state.ov.wiseFrame = e.target.checked; buildFrames(); };
+  $('#o-flags').onchange = e => { state.ov.flags = e.target.checked; if (state.ov.flags) loadFlags(state.token); else draw(); };
   $('#play').onclick = () => { state.playing = !state.playing; $('#play').textContent = state.playing ? '❚❚' : '▶︎'; };
   $('#prev').onclick = () => { state.playing = false; $('#play').textContent = '▶︎'; state.frameIdx = (state.frameIdx - 1 + state.frames.length) % Math.max(1, state.frames.length); draw(); };
   $('#next').onclick = () => { state.playing = false; $('#play').textContent = '▶︎'; state.frameIdx = (state.frameIdx + 1) % Math.max(1, state.frames.length); draw(); };
@@ -628,6 +652,8 @@ function wire() {
     ctx.fillText('NASA SPHEREx data via IRSA/AWS', 10, 758);
     const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = `spherex_${(state.target?.name || 'sky').replace(/\W+/g, '_')}_${state.frameIdx + 1}.png`; a.click();
   };
+  $('#save-gif').onclick = saveGif;
+  $('#flag').onclick = flagSource;
   $('#help-btn').onclick = () => $('#help').classList.toggle('hidden');
   $('#help-close').onclick = () => $('#help').classList.add('hidden');
   window.addEventListener('keydown', e => {
@@ -640,6 +666,62 @@ function wire() {
   });
   window.addEventListener('resize', () => { draw(); drawAnalysis(); });
 }
+// ---------------------------------------------------------------- GIF export
+async function saveGif() {
+  if (state.frames.length < 2) return log('Need at least 2 frames for a GIF', 'err');
+  const S = 480, keep = state.frameIdx, playing = state.playing;
+  state.playing = false;
+  const cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+  const frames = [];
+  for (let i = 0; i < state.frames.length; i++) {
+    state.frameIdx = i; draw();
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, S, S);
+    ctx.drawImage($('#fb-img'), 0, 0, S, S);
+    ctx.drawImage($('#fb-ovl'), 0, 0, S, S);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, S, 22); ctx.fillRect(0, S - 18, S, 18);
+    ctx.fillStyle = '#fff'; ctx.font = '12px monospace';
+    ctx.fillText(`${state.target?.name || ''} · ${state.frames[i].label}`.slice(0, 70), 6, 15);
+    ctx.fillText('BLINKSCOPE · NASA SPHEREx (IRSA/AWS) · WISE', 6, S - 5);
+    frames.push(ctx.getImageData(0, 0, S, S));
+  }
+  state.frameIdx = keep; state.playing = playing; draw();
+  const blob = encodeGif(frames, S, S, Math.round(1000 / state.fps));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `blinkscope_${(state.target?.name || 'sky').replace(/\W+/g, '_')}_${state.mode}.gif`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  log(`GIF saved · ${frames.length} frames · ${(blob.size / 1e6).toFixed(1)} MB`, 'ok');
+}
+
+// ---------------------------------------------------------------- citizen-science flags
+// A flag becomes a pre-filled public GitHub issue: no accounts or database of
+// our own, every report is public, reviewable and linkable.
+const REPO = 'https://github.com/asherbnsl/spherex-sky-eye';
+function flagSource() {
+  if (!state.center) return log('Lock a target first', 'err');
+  const useProbe = state.probe && !state.probe.target;
+  const [ra, dec] = useProbe ? gridToWorld(state.probe.i, state.probe.j) : state.center;
+  const f = state.frames[state.frameIdx];
+  const view = new URL(location.origin + location.pathname);
+  view.searchParams.set('ra', ra.toFixed(6)); view.searchParams.set('dec', dec.toFixed(6));
+  view.searchParams.set('fov', state.fov); view.searchParams.set('mode', 'diff'); view.searchParams.set('det', [...state.dets].sort().join(''));
+  const title = `[CANDIDATE] ${useProbe ? 'Source' : state.target?.name || 'Source'} at ${ra.toFixed(5)} ${dec >= 0 ? '+' : ''}${dec.toFixed(5)}`;
+  const body = [
+    '**What I noticed** (moving? brightening? new?):', '', '<describe it here>', '',
+    '---', `- RA, Dec (deg): ${ra.toFixed(6)}, ${dec.toFixed(6)}`, `- Near target: ${state.target?.name || '—'}`,
+    `- Frame: ${f ? f.label : '—'}`, `- Detectors: D${[...state.dets].sort().join(', D')}`, `- Field of view: ${state.fov}″`,
+    `- Open this view: ${view.toString()}`, '', '_Filed with BLINKSCOPE (NASA SPHEREx time-domain viewer)._',
+  ].join('\n');
+  try {
+    const mine = JSON.parse(localStorage.getItem('blinkscope.flags') || '[]');
+    mine.push({ ra, dec, t: Date.now(), target: state.target?.name });
+    localStorage.setItem('blinkscope.flags', JSON.stringify(mine.slice(-200)));
+  } catch { /* storage unavailable — the GitHub report still works */ }
+  window.open(`${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
+  log('Flag drafted as a public GitHub report — review and submit it in the new tab', 'ok');
+}
+
 function copy(text, msg) {
   navigator.clipboard?.writeText(text).then(() => log(msg, 'ok'), () => prompt('Copy:', text));
 }

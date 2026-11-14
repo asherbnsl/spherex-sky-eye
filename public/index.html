@@ -101,7 +101,10 @@
     <label class="chk"><input type="checkbox" id="o-gaia" checked> Gaia DR3</label>
     <label class="chk"><input type="checkbox" id="o-wise"> AllWISE</label>
     <label class="chk"><input type="checkbox" id="o-movers" checked> high-PM flags</label>
+    <label class="chk" title="Show pixels flagged for contamination (ghosts, crosstalk, persistence, hot pixels…) and leave them out of the stacks"><input type="checkbox" id="o-flags"> contamination</label>
     <button id="save-png" title="Save this frame as PNG">⤓ PNG</button>
+    <button id="save-gif" title="Save the whole flipbook as an animated GIF">⤓ GIF</button>
+    <button id="flag" class="flag" title="Report the probed source as a possible mover or variable">⚑ FLAG</button>
   </div>
 </main>
 
@@ -128,6 +131,7 @@
     <li>Toggle detectors <b>D1–D6</b> (0.75–5 µm) to stack them. Brown dwarfs glow brightest in D5–D6.</li>
     <li><b>Click a source</b> to build its spectrum (102 SPHEREx bands sampled on the fly) and light curve.</li>
     <li>Gaia DR3 circles are moved to each frame's date using their proper motions; AllWISE squares show where things were around 2010.</li>
+    <li>Spotted something? Click it, then <b>⚑ FLAG</b> to file a public report (a pre-filled GitHub issue) that anyone can review. <a href="https://github.com/asherbnsl/spherex-sky-eye/issues?q=is%3Aissue+%5BCANDIDATE%5D" target="_blank" rel="noopener noreferrer">See all community flags</a>.</li>
     <li>Share the exact view with <b>LINK</b>, or embed it with <b>EMBED</b> — e.g. <code>?ra=133.79&amp;dec=-7.245&amp;fov=360&amp;det=56</code>.</li>
   </ol>
   <p class="muted">Keys: space play/pause · ← → step · 1–6 toggle detectors · M cycle mode.</p>

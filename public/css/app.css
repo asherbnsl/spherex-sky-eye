@@ -39,6 +39,7 @@ h3::before { content: '▸ '; color: var(--amber); }
 #presets { position: fixed; top: 70px; left: 10px; right: 10px; z-index: 5; display: flex; gap: 6px; flex-wrap: wrap; }
 #presets button { background: var(--panel); font-size: 11px; }
 #presets button b { color: var(--amber); font-weight: 600; }
+#presets button.bonus { border-style: dashed; opacity: .85; }
 
 #left { top: 104px; left: 10px; width: 250px; bottom: 150px; padding: 4px 12px 12px; overflow: auto; }
 .big { font: 700 15px/1.25 var(--mono); color: #fff; margin-bottom: 6px; }
@@ -75,7 +76,9 @@ dt { color: var(--mute); } dd { margin: 0; color: var(--green); }
 .dets { display: flex; gap: 3px; }
 .dets button { padding: 4px 6px; font-size: 10px; min-width: 38px; }
 .dets button small { display: block; font-size: 8px; color: var(--mute); }
-.overlays button { margin-left: auto; }
+.overlays button#save-png { margin-left: auto; }
+button.flag { border-color: var(--amber); color: var(--amber); }
+button.flag:hover { background: rgba(255,176,0,.15); color: #fff; }
 
 #analysis { right: 10px; bottom: 10px; width: min(560px, 44vw); height: 230px; padding: 6px 10px; display: flex; flex-direction: column; }
 #probe-txt { margin: 4px 0; font-size: 11px; }
@@ -104,7 +107,8 @@ body.embed #topbar, body.embed #presets, body.embed #left, body.embed #log, body
 body.embed #flip { top: 6px; right: 6px; left: 6px; width: auto; max-width: 640px; margin: 0 auto; }
 
 @media (max-width: 1000px) {
-  html, body { overflow: auto; }
+  html, body { overflow-y: auto; overflow-x: hidden; }
+  #search > * { min-width: 0; }
   .panel, #presets, #credits { position: relative; inset: auto; width: auto !important; margin: 8px; }
   #topbar { height: auto; flex-wrap: wrap; padding: 8px; }
   #search { flex-wrap: wrap; }
