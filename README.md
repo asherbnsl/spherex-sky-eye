@@ -111,7 +111,7 @@ test/run.mjs             unit tests
 
 ## AI assistance (disclosure)
 
-The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the demo deck and video from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. No AI-generated images, video or audio are used.
+The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the demo deck and video from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. The demo video was assembled with AI assistance from real screenshots of the app and carries a visible "Assembled with AI assistance" watermark; no AI-generated imagery or audio is used, and every sky image is real NASA/ESA data.
 
 ## Licence
 
