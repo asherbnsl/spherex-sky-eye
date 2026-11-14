@@ -2,6 +2,8 @@
 
 **Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
 
+**Live:** https://spherex-sky-eye.vercel.app · **Demo deck:** [docs/demo/BLINKSCOPE_demo.pdf](docs/demo/BLINKSCOPE_demo.pdf)
+
 Pluto was found in 1930 by flipping between two photographs of the same patch of sky on a *blink comparator* and noticing one dot that moved. BLINKSCOPE does the same thing with NASA's SPHEREx all-sky infrared survey, in a browser, for any position you type.
 
 Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure that covers that spot, reads only the small patch around it from NASA's public SPHEREx archive, aligns the patches north-up and plays them like a short video, one frame per six-month sky pass. Anything that jumps between frames is moving.

@@ -1,6 +1,6 @@
 # Space Apps project page — text to paste
 
-> Fill in the live link and demo link once they exist. Everything must stay in English.
+> Everything must stay in English. Test every link in a private/incognito window before submitting.
 
 ## Project Name
 BLINKSCOPE — Blink the infrared sky. Catch what moves.
@@ -9,10 +9,10 @@ BLINKSCOPE — Blink the infrared sky. Catch what moves.
 BLINKSCOPE is a free web tool that turns NASA's SPHEREx all-sky infrared survey into a flipbook for any spot on the sky. Type an object name or RA/Dec and BLINKSCOPE finds every SPHEREx exposure covering that position, reads only the small patch needed straight from NASA's public SPHEREx archive, lines the patches up and plays them one frame per six-month sky pass, the same blink technique that found Pluto. Moving brown dwarfs, nearby stars and asteroids jump between frames, and variable stars brighten and fade. Users can stack SPHEREx's six detectors for cleaner images, subtract passes to highlight motion, view false-colour infrared, and click any source to build its 0.75–5 µm spectrum and light curve on the fly. With so much new SPHEREx data, discoveries need many eyes, and BLINKSCOPE gives anyone with a browser a way to look.
 
 ## Link to Project Demo
-<YouTube / Google Slides link — public, no login>
+https://github.com/asherbnsl/spherex-sky-eye/blob/main/docs/demo/BLINKSCOPE_demo.pdf  (7-slide deck)
 
 ## Link to Final Project
-<live site link> · Code: https://github.com/asherbnsl/spherex-sky-eye
+https://spherex-sky-eye.vercel.app · Code: https://github.com/asherbnsl/spherex-sky-eye
 
 ## Detailed Project Description
 **What it does**
