@@ -13,15 +13,22 @@ export async function searchImages(ra, dec) {
   // When the page itself is served from IRSA (test harness) we can query SIA directly.
   if (location.hostname === 'irsa.ipac.caltech.edu') return directSia(ra, dec);
   const u = `${CONFIG.apiBase}/api/sia?ra=${ra.toFixed(6)}&dec=${dec.toFixed(6)}&collections=${CONFIG.collections.join(',')}`;
-  const r = await fetch(u);
-  if (!r.ok) throw new Error('Archive search failed (' + r.status + ')');
+  let r = await fetch(u);
+  if (!r.ok) { await new Promise(res => setTimeout(res, 2000)); r = await fetch(u); }
+  if (!r.ok) throw new Error('NASA archive search is busy (' + r.status + ') — try again in a minute');
   const j = await r.json();
   return j.images.sort((a, b) => a.t - b.t);
 }
 
 async function directSia(ra, dec) {
   const q = CONFIG.collections.map(c => 'COLLECTION=' + c).join('&');
-  const text = await (await fetch(`/SIA?${q}&POS=circle+${ra}+${dec}+0.001&RESPONSEFORMAT=CSV`)).text();
+  let text = '';
+  for (let i = 0; i < 4; i++) {
+    text = await (await fetch(`/SIA?${q}&POS=circle+${ra}+${dec}+0.001&RESPONSEFORMAT=CSV`)).text();
+    if (!/^\s*</.test(text)) break;
+    await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+  }
+  if (/^\s*</.test(text)) throw new Error('IRSA archive is busy — try again in a minute');
   const lines = text.trim().split('\n');
   const head = lines.shift().split(',');
   const idx = k => head.indexOf(k);
@@ -31,6 +38,7 @@ async function directSia(ra, dec) {
     const f = []; let cur = '', q2 = false;
     for (let i = 0; i < l.length; i++) { const ch = l[i]; if (ch === '"') { if (q2 && l[i + 1] === '"') { cur += '"'; i++; } else q2 = !q2; } else if (ch === ',' && !q2) { f.push(cur); cur = ''; } else cur += ch; }
     f.push(cur);
+    if (f.length < head.length - 2) continue;
     const det = +f[idx('energy_bandpassname')].replace(/\D/g, '');
     let s3 = f[idx('access_url')];
     try { const ca = JSON.parse(f[idx('cloud_access')]); s3 = `https://${ca.aws.bucket_name}.s3.amazonaws.com/${ca.aws.key}`; } catch { }

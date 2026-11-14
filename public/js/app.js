@@ -81,6 +81,7 @@ function gridToWorld(i, j) {
 function readURL() {
   const p = new URLSearchParams(location.search);
   if (p.has('embed')) document.body.classList.add('embed');
+  state.urlHasView = p.has('fov') || p.has('det');
   if (p.has('fov')) state.fov = Math.min(1800, Math.max(60, +p.get('fov') || CONFIG.defaultFov));
   if (p.has('det')) state.dets = new Set([...p.get('det')].map(Number).filter(d => d >= 1 && d <= 6));
   if (p.has('mode')) state.mode = p.get('mode');
@@ -635,7 +636,7 @@ log(`${CONFIG.appName} online · collections: ${CONFIG.collections.join(', ')}`,
 tick();
 if (initial) {
   if (initial.ra !== undefined && Number.isFinite(initial.ra)) engage({ ra: initial.ra, dec: initial.dec, name: initial.name, keepView: true });
-  else if (initial.name) { $('#q').value = initial.name; engage({ name: initial.name, keepView: true }); }
+  else if (initial.name) { $('#q').value = initial.name; engage({ name: initial.name, keepView: state.urlHasView }); }
 } else {
   $('#help').classList.remove('hidden');
 }

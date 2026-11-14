@@ -13,7 +13,9 @@ export function send(res, status, obj, maxAge = 3600) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  if (status === 200) res.setHeader('Cache-Control', `public, max-age=300, s-maxage=${maxAge}, stale-while-revalidate=86400`);
+  // long CDN caching + serve-stale-on-error keeps tested targets working even
+  // when the upstream archive is briefly down
+  if (status === 200) res.setHeader('Cache-Control', `public, max-age=300, s-maxage=${maxAge}, stale-while-revalidate=604800, stale-if-error=604800`);
   res.end(JSON.stringify(obj));
 }
 
@@ -46,12 +48,21 @@ export function parseCSV(text) {
   return rows.map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));
 }
 
-export async function fetchText(url, timeoutMs = 25000) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), timeoutMs);
-  try {
-    const r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'spherex-sky-viewer (hackathon)' } });
-    if (!r.ok) throw new Error(`upstream ${r.status}`);
-    return await r.text();
-  } finally { clearTimeout(t); }
+export async function fetchText(url, timeoutMs = 25000, attempts = 3) {
+  let last;
+  for (let i = 0; i < attempts; i++) {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, { signal: ctl.signal, headers: { 'User-Agent': 'blinkscope (NASA Space Apps 2026)' } });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`upstream ${r.status}`);
+      if (/^\s*<!DOCTYPE HTML|^\s*<html/i.test(text)) throw new Error('upstream returned an error page');
+      return text;
+    } catch (e) {
+      last = e;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 1000 * 2 ** i));
+    } finally { clearTimeout(t); }
+  }
+  throw last;
 }

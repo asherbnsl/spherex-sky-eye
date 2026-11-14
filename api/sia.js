@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     const seen = new Set();
     const images = [];
     for (const r of rows) {
+      if (!r.obs_id || !r.energy_bandpassname) continue;
       const det = +String(r.energy_bandpassname || '').replace(/\D/g, '');
       const id = r.obs_id + '/' + det;
       if (seen.has(id)) continue;
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
         collection: r.obs_collection, released: r.obs_release_date,
       });
     }
-    send(res, 200, { ra, dec, collections: cols, count: images.length, images });
+    send(res, 200, { ra, dec, collections: cols, count: images.length, images }, 86400);
   } catch (e) {
     send(res, 502, { error: String(e.message || e) });
   }
