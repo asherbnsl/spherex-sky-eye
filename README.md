@@ -1,6 +1,6 @@
 # BLINKSCOPE — blink the infrared sky, catch what moves
 
-**NASA Space Apps Challenge 2026** · Challenge: *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
+**Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
 
 Pluto was found in 1930 by flipping between two photographs of the same patch of sky on a *blink comparator* and noticing one dot that moved. BLINKSCOPE does the same thing with NASA's SPHEREx all-sky infrared survey, in a browser, for any position you type.
 
@@ -96,7 +96,7 @@ test/run.mjs             unit tests
 
 ## AI assistance (disclosure)
 
-The project concept, feature choices, target selection, testing and the demo are by the team. An AI coding assistant (Claude, by Anthropic) was used to help write and debug parts of the code (FITS/WCS reader, proxy functions, UI wiring) and this README. All AI-assisted code was reviewed and tested by the team. No AI-generated images, video or audio are used.
+The project concept, feature choices, target selection, testing and the demo are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to help write and debug parts of the code (FITS/WCS reader, proxy functions, UI wiring) and this README. All AI-assisted code was reviewed and tested by the team. No AI-generated images, video or audio are used.
 
 ## Licence
 
