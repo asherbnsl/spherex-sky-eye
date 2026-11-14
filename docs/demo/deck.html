@@ -1,0 +1,152 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: Orb; src: url(orbitron-latin-800-normal.woff2); font-weight: 800; }
+@font-face { font-family: JB; src: url(jetbrains-mono-latin-400-normal.woff2); font-weight: 400; }
+@font-face { font-family: JB; src: url(jetbrains-mono-latin-700-normal.woff2); font-weight: 700; }
+@page { size: 1280px 720px; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #04070c; color: #cfeaf5; font: 22px/1.45 JB, monospace; }
+.s { width: 1280px; height: 720px; position: relative; overflow: hidden; padding: 56px 70px; page-break-after: always;
+  background: radial-gradient(ellipse at 70% 30%, #0b2236 0%, #04070c 65%); }
+.s::before, .s::after { content: ''; position: absolute; width: 26px; height: 26px; border: 3px solid #00e5ff; }
+.s::before { top: 22px; left: 22px; border-right: 0; border-bottom: 0; }
+.s::after { bottom: 22px; right: 22px; border-left: 0; border-top: 0; }
+.tag { color: #ffb000; letter-spacing: .25em; font-size: 15px; font-weight: 700; }
+h1 { font: 800 92px/1 Orb; letter-spacing: .08em; color: #fff; margin: 18px 0 10px; text-shadow: 0 0 30px rgba(0,229,255,.6); }
+h2 { font: 800 40px/1.15 Orb; color: #fff; margin: 10px 0 24px; letter-spacing: .04em; }
+.sub { font-size: 28px; color: #00e5ff; }
+.muted { color: #7fa6bd; }
+.foot { position: absolute; left: 70px; right: 70px; bottom: 34px; font-size: 14px; color: #6f8aa0; display: flex; justify-content: space-between; }
+ul { margin: 0; padding-left: 26px; } li { margin: 8px 0; } li::marker { color: #ffb000; }
+b, .hi { color: #39ff88; font-weight: 700; }
+.row { display: flex; gap: 34px; align-items: flex-start; }
+.img { border: 2px solid rgba(0,229,255,.5); box-shadow: 0 0 24px rgba(0,229,255,.18); display: block; }
+.cap { font-size: 16px; color: #ffb000; margin-top: 8px; text-align: center; }
+.pipe { display: flex; align-items: stretch; gap: 0; margin-top: 18px; }
+.box { flex: 1; border: 2px solid rgba(0,229,255,.55); padding: 16px 14px; background: rgba(0,229,255,.05); font-size: 18px; }
+.box b { display: block; color: #00e5ff; font-size: 19px; margin-bottom: 6px; }
+.arrow { width: 38px; display: flex; align-items: center; justify-content: center; color: #ffb000; font-size: 30px; }
+table { border-collapse: collapse; width: 100%; font-size: 19px; }
+td, th { padding: 9px 12px; border-bottom: 1px solid rgba(0,229,255,.18); text-align: left; }
+th { color: #7fa6bd; font-weight: 400; }
+.big { font-size: 64px; font-family: Orb; color: #39ff88; }
+</style></head><body>
+
+<!-- 1 TITLE -->
+<section class="s">
+  <div class="tag">NASA SPACE APPS CHALLENGE 2026 · TEAM SHRAPNEL</div>
+  <h1>BLINKSCOPE</h1>
+  <div class="sub">Blink the infrared sky. Catch what moves.</div>
+  <div style="margin-top:46px;font-size:24px">
+    <div><span class="muted">Team</span> &nbsp;Shrapnel</div>
+    <div><span class="muted">Members</span> &nbsp;Arsh Bansal</div>
+    <div><span class="muted">Challenge</span> &nbsp;A public web tool that shows SPHEREx images of any patch of sky as a short video, so anyone can see how it changes over time</div>
+  </div>
+  <div class="foot"><span>Live: spherex-sky-eye.vercel.app</span><span>Code: github.com/asherbnsl/spherex-sky-eye</span></div>
+</section>
+
+<!-- 2 WHY -->
+<section class="s">
+  <div class="tag">THE PROBLEM</div>
+  <h2>A billion infrared objects.<br>Twice a year. Not enough eyes.</h2>
+  <div class="row">
+    <ul style="flex:1.2">
+      <li>NASA's <b>SPHEREx</b> maps the <b>whole sky every 6 months</b> in 102 near-infrared colours (0.75–5 µm).</li>
+      <li>Brown dwarfs, nearby stars, comets and asteroids give themselves away by <b>moving</b> between maps; variable stars by <b>changing brightness</b>.</li>
+      <li>Most known brown dwarfs were found by <b>volunteers</b> flipping between images, the same "blink" trick that found <b>Pluto in 1930</b>.</li>
+    </ul>
+    <div style="flex:.8;border:2px solid rgba(255,176,0,.5);padding:22px;font-size:20px">
+      <div class="tag" style="margin-bottom:10px">OUR GOAL</div>
+      Type any object or coordinates → see SPHEREx images of that spot <b>play like a flipbook</b> in seconds, in any browser, with nothing to install.
+    </div>
+  </div>
+  <div class="foot"><span>BLINKSCOPE · Team Shrapnel</span><span>2 / 7</span></div>
+</section>
+
+<!-- 3 DEMO: the blink -->
+<section class="s">
+  <div class="tag">WHAT IT DOES</div>
+  <h2 style="margin-bottom:16px">Barnard's Star: 15 years in one blink</h2>
+  <div class="row" style="justify-content:center;gap:40px">
+    <div><img class="img" src="barnard_2010.png" style="width:380px"><div class="cap">WISE 2010 (NASA)</div></div>
+    <div style="align-self:center;font:800 46px Orb;color:#ffb000">⇄</div>
+    <div><img class="img" src="barnard_2026.png" style="width:380px"><div class="cap">SPHEREx 2026 (NASA)</div></div>
+  </div>
+  <div style="text-align:center;margin-top:14px;font-size:20px">The star jumps <b>2.7′</b> across the field. The cyan crosshair is its predicted position on each date; circles are <b>ESA Gaia DR3</b> stars moved to the same date.</div>
+  <div class="foot"><span>Live: spherex-sky-eye.vercel.app/?target=barnard</span><span>3 / 7</span></div>
+</section>
+
+<!-- 4 HOW -->
+<section class="s">
+  <div class="tag">HOW IT WORKS</div>
+  <h2>65 MB files → 0.5 MB reads → a flipbook in ~3 s</h2>
+  <div class="pipe">
+    <div class="box"><b>1 · FIND</b>NASA/IPAC IRSA archive lists every SPHEREx exposure covering the position (200–400 per target)</div>
+    <div class="arrow">▶</div>
+    <div class="box"><b>2 · READ</b>Range requests to NASA's public AWS copy fetch <span class="hi">only the rows around the target</span>, straight from the browser</div>
+    <div class="arrow">▶</div>
+    <div class="box"><b>3 · ALIGN</b>Full TAN-SIP astrometry puts every exposure on one north-up sky grid</div>
+    <div class="arrow">▶</div>
+    <div class="box"><b>4 · BLINK</b>Stack detectors per 6-month pass, subtract passes, measure spectra &amp; light curves</div>
+  </div>
+  <ul style="margin-top:28px;font-size:20px">
+    <li><b>New data releases:</b> add one collection name in a config file; everything else is computed live.</li>
+    <li><b>Robust:</b> retries, edge caching, mirror fallbacks and a saved listing keep the demo targets working when archives are busy.</li>
+  </ul>
+  <div class="foot"><span>Plain JavaScript · no install · 3 tiny serverless proxies</span><span>4 / 7</span></div>
+</section>
+
+<!-- 5 FEATURES -->
+<section class="s">
+  <div class="tag">USER EXPERIENCE</div>
+  <h2 style="margin-bottom:16px">See it, compare it, measure it</h2>
+  <div class="row">
+    <div style="flex:1">
+      <img class="img" src="rwaur_rgb.png" style="width:330px">
+      <div class="cap">RW Aurigae · IR colour from SPHEREx detectors</div>
+    </div>
+    <div style="flex:1.45">
+      <ul style="font-size:19px">
+        <li><b>PASSES / DIFF / IR COLOUR / STACK ALL</b>: blink, subtract (red = now, blue = before), false-colour, deepest image</li>
+        <li><b>D1–D6 toggles</b> stack SPHEREx's 6 detectors for higher signal-to-noise</li>
+        <li><b>Click a star</b> → 0.75–5 µm <b>spectrum on the fly</b> and per-pass <b>light curve</b></li>
+        <li>3D sky globe · Gaia DR3 &amp; AllWISE overlays · contamination flags · <b>shareable / embeddable URL</b></li>
+      </ul>
+      <img class="img" src="rwaur_spec.png" style="width:440px;margin-top:10px">
+    </div>
+  </div>
+  <div class="foot"><span>Spectrum rises into the infrared: the warm dusty disk of a young star</span><span>5 / 7</span></div>
+</section>
+
+<!-- 6 VALIDATION -->
+<section class="s">
+  <div class="tag">TESTED ON THE CHALLENGE TARGETS</div>
+  <h2>All five work, live</h2>
+  <table>
+    <tr><th>Target</th><th>Why it matters</th><th>SPHEREx exposures</th><th>Result</th></tr>
+    <tr><td>Barnard's Star</td><td>fastest star in the sky</td><td>239</td><td>jumps 2.7′ vs WISE 2010</td></tr>
+    <tr><td>WISE 0855−0714</td><td>coldest known brown dwarf</td><td>258</td><td><b>detected S/N 10–14</b> in every pass at its predicted moving position</td></tr>
+    <tr><td>Epsilon Indi B</td><td>brown dwarf pair</td><td>345</td><td>tracked with proper motion</td></tr>
+    <tr><td>RW Aurigae</td><td>variable young star</td><td>226</td><td>spectrum + light curve</td></tr>
+    <tr><td>R Draconis</td><td>Mira variable</td><td>413</td><td>saturated core → PSF-wing photometry</td></tr>
+  </table>
+  <div class="foot"><span>Typical load: 2–8 s per target · 15 automated unit tests</span><span>6 / 7</span></div>
+</section>
+
+<!-- 7 FUTURE -->
+<section class="s">
+  <div class="tag">WHAT'S NEXT</div>
+  <h2>Every SPHEREx pass adds a frame.<br>Every user adds a pair of eyes.</h2>
+  <ul style="font-size:21px">
+    <li>Citizen-science <b>"flag a mover"</b> button feeding a shared candidate list, Backyard Worlds-style</li>
+    <li>Automatic mover search: compare SPHEREx positions with Gaia &amp; WISE across the whole sky</li>
+    <li>Asteroid &amp; comet mode using predicted orbits</li>
+  </ul>
+  <div style="margin-top:30px;font-size:17px" class="muted">
+    Data: NASA SPHEREx (IRSA + AWS Open Data) · NASA WISE/AllWISE &amp; unWISE · ESA Gaia DR3 · CDS Strasbourg (Aladin Lite, Sesame, HiPS) · ESA ESASky &amp; CSIRO mirrors.<br>
+    UI inspired by God's Eye View (MIT). Code written with AI assistance (Claude), reviewed and tested by the team. Not affiliated with or endorsed by NASA.
+  </div>
+  <div class="foot"><span>spherex-sky-eye.vercel.app</span><span>github.com/asherbnsl/spherex-sky-eye · 7 / 7</span></div>
+</section>
+</body></html>
