@@ -2,7 +2,7 @@
 
 **Team Shrapnel** · Arsh Bansal · **NASA Space Apps Challenge 2026** · Challenge: **Planet X and SPHEREx**, *display images of the sky from the SPHEREx mission so anyone can quickly see how they change over time.*
 
-**Live:** https://spherex-sky-eye.vercel.app · **Demo deck:** [docs/demo/BLINKSCOPE_demo.pdf](docs/demo/BLINKSCOPE_demo.pdf)
+**Live:** https://spherex-sky-eye.vercel.app · **Demo video (27 s):** [docs/demo/BLINKSCOPE_demo_30s.mp4](docs/demo/BLINKSCOPE_demo_30s.mp4) · **Deck:** [docs/demo/BLINKSCOPE_demo.pdf](docs/demo/BLINKSCOPE_demo.pdf)
 
 Pluto was found in 1930 by flipping between two photographs of the same patch of sky on a *blink comparator* and noticing one dot that moved. BLINKSCOPE does the same thing with NASA's SPHEREx all-sky infrared survey, in a browser, for any position you type.
 
@@ -24,9 +24,12 @@ Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure tha
 | **Gaia DR3 overlay with proper motion** | Every Gaia source is moved to each frame's date, and fast movers (>0.2″/yr) are flagged red with motion vectors. |
 | **AllWISE overlay** | Where things were around 2010, for a ~15-year motion baseline. |
 | **3D sky globe** | Aladin Lite in orthographic (globe) projection with the SPHEREx all-sky maps (colour + D1–D6), AllWISE, unWISE, 2MASS and DSS layers. |
+| **Per-pixel contamination flags** | Toggle *contamination*: the FLAGS extension (RICE-compressed) is decoded in the browser, flagged pixels (ghosts, crosstalk, persistence, hot pixels, streaks...) are drawn in red and left out of the stacks. |
+| **Flag a mover** | ⚑ FLAG files a pre-filled public GitHub issue with the position and a link back to the view, so anyone can review candidates. |
+| **GIF export** | Save the whole flipbook as an animated GIF to share. |
 | **Contamination metadata** | FRAME DATA tab lists every exposure in the frame with UTC, detector, wavelength range, exposure time, the share of the detector flagged (ghosts, crosstalk, persistence, snowballs…) and a link to the original IRSA file. |
 | **URL queries and embedding** | `?ra=133.7951&dec=-7.2452&fov=360&det=56&mode=diff`, or `?target=barnard`. **EMBED** copies an `<iframe>` (`&embed=1` shows only the flipbook). |
-| **Easy to update** | New data releases: add the collection name to `collections` in `public/js/config.js`. Everything else (epochs, frames, spectra) is computed live from what the archive returns. |
+| **Easy to update** | New data releases: add the collection name to `collections` in `public/js/config.js` (DR1 + the newest Quick Release, QR3, are both loaded: data through Sept 2026). Everything else (epochs, frames, spectra) is computed live from what the archive returns. |
 
 ### Challenge test targets (one-click chips)
 
@@ -51,13 +54,14 @@ browser ──────────────▶ CDS Sesame (names), CDS Hi
 * **Survey passes:** exposures are clustered by time gaps of more than 30 days; SPHEREx maps the whole sky every ~6 months.
 * **Resilience:** the archive search is retried, cached at the CDN edge (served stale if IRSA is down), and the five challenge targets also ship with a saved archive listing (`public/data/snapshot.json`, taken 2026-11-14) as a last-resort fallback. All-sky globe layers are probed at start-up and switch to working mirrors automatically (CDS, ESA ESASky, CSIRO).
 * **Validated:** WISE 0855−0714, the coldest known brown dwarf, is detected at S/N 10–14 in each SPHEREx pass exactly at its proper-motion-predicted position.
+* **Security:** all remote and user text is escaped before display, a strict Content-Security-Policy and standard security headers are set, the proxy only forwards validated numeric queries to fixed hosts and is rate-limited per IP. No accounts, cookies or personal data.
 * Plain ES modules with no build step and no framework. Three small serverless functions for the proxy.
 
 ## Run it
 
 ```bash
 node server.mjs          # http://localhost:8080   (Node 18+)
-npm test                 # 15 unit tests: WCS, coordinate parsing, FITS cards, CSV quirks, stacking, photometry, wavelength lookup, snapshot
+npm test                 # 16 unit tests: WCS, coordinate parsing, FITS cards, CSV quirks, stacking, photometry, wavelength lookup, RICE decoder, snapshot
 ```
 
 Deploy: import the repo into Vercel (framework preset "Other"). `public/` is served statically and `api/*.js` become serverless functions.
@@ -72,6 +76,8 @@ public/js/app.js         controller: search, download, flipbook, overlays, analy
 public/js/spherex.js     archive search, range-read cutouts, reprojection, stacking, photometry
 public/js/fits.js        minimal FITS header/HDU reader over HTTP Range
 public/js/wcs.js         TAN-SIP WCS
+public/js/rice.js        RICE_1 decoder for the compressed FLAGS images
+public/js/gif.js         animated GIF encoder
 public/js/wise.js        WISE 2010 reference frame (unWISE cutouts)
 public/data/snapshot.json saved archive listing for the 5 challenge targets (fallback)
 public/js/render.js      stretches and colour maps
@@ -105,7 +111,7 @@ test/run.mjs             unit tests
 
 ## AI assistance (disclosure)
 
-The project concept, feature choices, target selection, testing and the demo are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to help write and debug parts of the code (FITS/WCS reader, proxy functions, UI wiring) and this README. All AI-assisted code was reviewed and tested by the team. No AI-generated images, video or audio are used.
+The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the demo deck and video from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. No AI-generated images, video or audio are used.
 
 ## Licence
 

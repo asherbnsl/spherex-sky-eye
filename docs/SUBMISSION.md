@@ -12,7 +12,7 @@ BLINKSCOPE — Blink the infrared sky. Catch what moves.
 BLINKSCOPE is a free web tool that turns NASA's SPHEREx all-sky infrared survey into a flipbook for any spot on the sky. Type an object name or RA/Dec and BLINKSCOPE finds every SPHEREx exposure covering that position, reads only the small patch needed straight from NASA's public SPHEREx archive, lines the patches up and plays them one frame per six-month sky pass, the same blink technique that found Pluto. Moving brown dwarfs, nearby stars and asteroids jump between frames, and variable stars brighten and fade. Users can stack SPHEREx's six detectors for cleaner images, subtract passes to highlight motion, view false-colour infrared, and click any source to build its 0.75–5 µm spectrum and light curve on the fly. With so much new SPHEREx data, discoveries need many eyes, and BLINKSCOPE gives anyone with a browser a way to look.
 
 ## Link to Project Demo
-https://github.com/asherbnsl/spherex-sky-eye/blob/main/docs/demo/BLINKSCOPE_demo.pdf  (7-slide deck)
+https://github.com/asherbnsl/spherex-sky-eye/raw/main/docs/demo/BLINKSCOPE_demo_30s.mp4  (27-second video; better: upload it to YouTube as Unlisted/Public and paste that link)
 
 ## Link to Final Project
 https://spherex-sky-eye.vercel.app · Code: https://github.com/asherbnsl/spherex-sky-eye
@@ -27,6 +27,7 @@ https://spherex-sky-eye.vercel.app · Code: https://github.com/asherbnsl/spherex
 - Click a source to get its spectrum (each exposure measured at its exact wavelength from SPHEREx's spectral calibration) and its light curve per detector.
 - Gaia DR3 stars are drawn at their predicted position for each frame's date, and fast movers are flagged; AllWISE shows positions around 2010.
 - A 3D sky globe shows SPHEREx, WISE, 2MASS and optical all-sky maps.
+- Per-pixel contamination flags can be overlaid and are excluded from stacks; ⚑ FLAG files a public report of a candidate mover; the flipbook exports as a GIF.
 - A frame-data table shows each exposure's date, detector, wavelength range and contamination-flag summary, with links to the original archive files.
 - The whole view is encoded in the URL, so it can be shared or embedded in other sites (`?target=wise0855&mode=diff`).
 
@@ -54,4 +55,4 @@ SPHEREx images are 65 MB files. BLINKSCOPE never downloads them whole: it reads 
 - Google Fonts: JetBrains Mono, Orbitron (OFL).
 
 ## Use of Super Intelligence (SI)
-Yes. An AI coding assistant (Claude by Anthropic) helped write and debug parts of the code (FITS/WCS reader, proxy functions, UI wiring) and the README. The concept, features, testing and demo are the team's own. This is acknowledged in the README and in the site footer. No AI-generated images, video or audio are used.
+Yes. An AI coding assistant (Claude by Anthropic) wrote and debugged much of the code under my direction (FITS/WCS reader, RICE decoder, proxy functions, UI), drafted the README and assembled the demo slides/video from real screenshots of the app. The core concept (a God's-Eye-View-style viewer for SPHEREx built around the challenge's suggestions), feature choices and testing direction are mine. The AI also suggested the project name and a few feature ideas (WISE 2010 reference frame, DIFF colour scheme, reports via GitHub issues). This is acknowledged in the README, the site footer and the video watermark. No AI-generated imagery: all images are real NASA data rendered by the app.
