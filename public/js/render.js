@@ -46,7 +46,7 @@ export function drawFrame(canvas, frame, opts) {
       d[4 * k + 3] = 255;
     }
   } else if (frame.kind === 'diff') {
-    const w = Math.max(1, hi / 2);
+    const w = Math.max(2.5, hi * 0.6);
     for (let k = 0; k < n * n; k++) {
       const v = frame.data[k];
       const s = Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(127.5 + 127.5 * Math.tanh(v / w)))) : 127;

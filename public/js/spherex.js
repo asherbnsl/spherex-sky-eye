@@ -246,3 +246,19 @@ export function propagate(ra, dec, pmra, pmdec, epoch0, epoch1) {
   if (!pmra && !pmdec) return [ra, dec];
   return offsetToWorld(ra, dec, (pmra || 0) / 1000 * dt, (pmdec || 0) / 1000 * dt);
 }
+
+// 3x3 Gaussian smoothing (σ≈1 px) — boosts S/N of point sources in difference images
+export function smooth(data, n) {
+  const k = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+  const out = new Float32Array(n * n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    let s = 0, w = 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+      const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= n || y >= n) continue;
+      const v = data[y * n + x]; if (!Number.isFinite(v)) continue;
+      const kk = k[(dj + 1) * 3 + di + 1]; s += v * kk; w += kk;
+    }
+    out[j * n + i] = w ? s / w * Math.sqrt(w / 16 * 16 / 4) : NaN;
+  }
+  return out;
+}

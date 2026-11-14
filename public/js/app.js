@@ -297,7 +297,7 @@ function buildFrames() {
       const others = avg.filter((s, j) => s && j !== i);
       if (!others.length) return null;
       const data = avg[i].data.map((v, k) => { let s = 0, m = 0; for (const o of others) if (Number.isFinite(o.data[k])) { s += o.data[k]; m++; } return m ? (v - s / m) * Math.sqrt(byEpoch[i].length) : NaN; });
-      return { kind: 'diff', n: avg[i].n, data, label: `PASS ${i + 1} − OTHERS · red = now, blue = before`, ...meta(byEpoch[i], e) };
+      return { kind: 'diff', n: avg[i].n, data: SX.smooth(data, avg[i].n), label: `PASS ${i + 1} − OTHERS · red = now, blue = before`, ...meta(byEpoch[i], e) };
     }).filter(Boolean);
   } else if (state.mode === 'rgb') {
     const all = state.cuts;
@@ -626,6 +626,9 @@ function wire() {
 function copy(text, msg) {
   navigator.clipboard?.writeText(text).then(() => log(msg, 'ok'), () => prompt('Copy:', text));
 }
+
+// exposed for debugging from the browser console
+window.BLINKSCOPE = { state, SX, CONFIG };
 
 // ---------------------------------------------------------------- boot
 const initial = readURL();
