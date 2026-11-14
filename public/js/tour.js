@@ -1,6 +1,6 @@
 // 30-second guided tour: spotlights one part of the screen at a time.
 const STEPS = [
-  { sel: '#presets', text: '<b>Start here.</b> Pick one of the challenge targets, or type any star name or sky coordinates in the search box above.' },
+  { sel: ['#search', '#presets'], text: '<b>Start here.</b> Type any star name or sky coordinates (RA Dec) in the <b>search box</b> and press ENGAGE, or click one of the <b>challenge targets</b> below it.' },
   { sel: '#stage', text: 'This is the <b>flipbook</b>: the same patch of sky on different dates. The first frame is WISE in 2010; the rest are SPHEREx passes, about 6 months apart. A dot that <b>jumps</b> between frames is moving.' },
   { sel: '#player', text: '<b>Play, pause or step</b> through time. The bright marks on the timeline are the dates.' },
   { sel: '#modes', text: '<b>PASSES</b> plays the frames. <b>DIFF</b> shows only what changed: red is where something is now, blue is where it was. <b>IR COLOUR</b> shows how hot things are.' },
@@ -14,11 +14,15 @@ const $ = s => document.querySelector(s);
 
 function place() {
   const step = STEPS[i];
-  const el = $(step.sel);
-  if (!el || !el.getClientRects().length) { if (i < STEPS.length - 1) { i++; return place(); } return end(); }
+  const els = [].concat(step.sel).map(q => $(q)).filter(e => e && e.getClientRects().length);
+  const el = els[0];
+  if (!el) { if (i < STEPS.length - 1) { i++; return place(); } return end(); }
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   setTimeout(() => {
-    const r = el.getBoundingClientRect(), pad = 6;
+    const rs = els.map(e => e.getBoundingClientRect());
+    const r = { left: Math.min(...rs.map(x => x.left)), top: Math.min(...rs.map(x => x.top)), right: Math.max(...rs.map(x => x.right)), bottom: Math.max(...rs.map(x => x.bottom)) };
+    r.width = r.right - r.left; r.height = r.bottom - r.top;
+    const pad = 6;
     const spot = $('#tour-spot');
     Object.assign(spot.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + 2 * pad + 'px', height: r.height + 2 * pad + 'px' });
     const box = $('#tour-box'), bw = 330, bh = box.offsetHeight || 170;
