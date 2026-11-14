@@ -1,0 +1,13 @@
+{
+  "name": "blinkscope",
+  "version": "1.0.0",
+  "description": "Public web tool that plays NASA SPHEREx images of any sky position like a short video to reveal moving and variable objects.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/run.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

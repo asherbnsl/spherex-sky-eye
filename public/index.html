@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BLINKSCOPE — blink the infrared sky</title>
+<meta name="description" content="Enter a sky position and watch NASA SPHEREx infrared images of it play like a short video. Spot moving brown dwarfs, asteroids and variable stars; stack detectors, subtract epochs and build spectra on the fly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8" defer></script>
+</head>
+<body>
+<div id="sky"></div>
+<div id="scan"></div>
+
+<header id="topbar" class="panel">
+  <div class="brand">
+    <div class="logo"><span id="app-name">BLINKSCOPE</span><small>BLINK THE INFRARED SKY · CATCH WHAT MOVES</small></div>
+  </div>
+  <form id="search" autocomplete="off">
+    <input id="q" placeholder="Object name or RA Dec — e.g. 08h55m10.831s -7d14m42.53s" spellcheck="false">
+    <select id="fov" title="Field of view">
+      <option value="120">FOV 2′</option><option value="180">FOV 3′</option><option value="240">FOV 4′</option>
+      <option value="300" selected>FOV 5′</option><option value="360">FOV 6′</option><option value="420">FOV 7′</option>
+      <option value="600">FOV 10′</option><option value="900">FOV 15′</option>
+    </select>
+    <select id="quality" title="How many exposures to download">
+      <option value="2">QUICK · 2/detector/pass</option>
+      <option value="5">STANDARD · 5/detector/pass</option>
+      <option value="999">DEEP · every exposure</option>
+    </select>
+    <button type="submit" class="primary">ENGAGE</button>
+  </form>
+  <div class="actions">
+    <button id="share" title="Copy a link to this exact view">⧉ LINK</button>
+    <button id="embed" title="Copy an embeddable iframe snippet">⌘ EMBED</button>
+    <button id="help-btn" title="How to use">?</button>
+  </div>
+</header>
+
+<nav id="presets"></nav>
+
+<aside id="left" class="panel">
+  <h3>TARGET</h3>
+  <div id="tgt-name" class="big">— no lock —</div>
+  <dl id="tgt">
+    <dt>RA</dt><dd id="t-ra">—</dd>
+    <dt>DEC</dt><dd id="t-dec">—</dd>
+    <dt>PM</dt><dd id="t-pm">—</dd>
+    <dt>TYPE</dt><dd id="t-type">—</dd>
+  </dl>
+  <h3>SPHEREx COVERAGE</h3>
+  <div id="coverage" class="muted">Search a target to list every SPHEREx exposure that covers it.</div>
+  <h3>SKY LAYER</h3>
+  <select id="layer"></select>
+  <label class="chk"><input type="checkbox" id="aladin-gaia"> Gaia DR3 on globe</label>
+  <h3>LINK STATUS</h3>
+  <div id="progress"><div id="bar"></div></div>
+  <div id="prog-txt" class="muted">idle</div>
+</aside>
+
+<main id="flip" class="panel">
+  <div class="flip-head">
+    <h3>FLIPBOOK</h3>
+    <div class="tabs" id="modes">
+      <button data-mode="epochs" class="on" title="One frame per 6-month survey pass, detectors stacked">PASSES</button>
+      <button data-mode="exposures" title="Every exposure in time order">EXPOSURES</button>
+      <button data-mode="diff" title="Each pass minus the others: red = now, blue = before">DIFF</button>
+      <button data-mode="rgb" title="False colour: blue D1+D2, green D3+D4, red D5+D6">IR COLOUR</button>
+      <button data-mode="deep" title="Everything added together for the deepest image">STACK ALL</button>
+    </div>
+  </div>
+  <div id="stage">
+    <canvas id="fb-img"></canvas>
+    <canvas id="fb-ovl"></canvas>
+    <div id="fb-label"></div>
+    <div id="fb-corner"></div>
+    <div id="fb-empty">Pick a test target above, or type a name / coordinates and press ENGAGE.</div>
+  </div>
+  <div id="player">
+    <button id="prev" title="Previous frame (←)">◀</button>
+    <button id="play" title="Play / pause (space)">❚❚</button>
+    <button id="next" title="Next frame (→)">▶</button>
+    <input type="range" id="speed" min="1" max="12" value="2" title="Frames per second">
+    <span id="speed-txt">2 fps</span>
+    <div id="timeline"></div>
+  </div>
+  <div class="ctl-row">
+    <div class="dets" id="dets"></div>
+    <select id="look" title="Sensor look"></select>
+  </div>
+  <div class="ctl-row">
+    <label>BLACK <input type="range" id="lo" min="-5" max="5" step="0.5" value="-1"></label>
+    <label>WHITE <input type="range" id="hi" min="3" max="80" step="1" value="20"></label>
+    <label class="chk"><input type="checkbox" id="pix"> pixels</label>
+  </div>
+  <div class="ctl-row overlays">
+    <label class="chk"><input type="checkbox" id="o-target" checked> target track</label>
+    <label class="chk"><input type="checkbox" id="o-gaia" checked> Gaia DR3</label>
+    <label class="chk"><input type="checkbox" id="o-wise"> AllWISE</label>
+    <label class="chk"><input type="checkbox" id="o-movers" checked> high-PM flags</label>
+    <button id="save-png" title="Save this frame as PNG">⤓ PNG</button>
+  </div>
+</main>
+
+<section id="analysis" class="panel">
+  <div class="tabs" id="atabs">
+    <button data-tab="spec" class="on">SPECTRUM</button>
+    <button data-tab="lc">LIGHT CURVE</button>
+    <button data-tab="meta">FRAME DATA</button>
+  </div>
+  <div id="probe-txt" class="muted">Click anywhere on the flipbook to probe a source.</div>
+  <canvas id="chart" class="tab tab-spec tab-lc"></canvas>
+  <div id="meta" class="tab tab-meta hidden"></div>
+</section>
+
+<section id="log" class="panel"><div id="log-lines"></div></section>
+
+<div id="help" class="panel hidden">
+  <button id="help-close">✕</button>
+  <h2>How to use</h2>
+  <ol>
+    <li><b>Pick a target</b> from the chips, or type a name (resolved by CDS Sesame) or coordinates (decimal or sexagesimal) and press <b>ENGAGE</b>.</li>
+    <li>The tool lists every SPHEREx exposure covering that spot, reads only the small patch you need straight from NASA's public SPHEREx archive on AWS, and lines them all up north-up.</li>
+    <li><b>PASSES</b> plays one frame per 6-month all-sky pass. A source that jumps between frames is moving. <b>DIFF</b> shows each pass minus the others — red is where something is now, blue where it was.</li>
+    <li>Toggle detectors <b>D1–D6</b> (0.75–5 µm) to stack them. Brown dwarfs glow brightest in D5–D6.</li>
+    <li><b>Click a source</b> to build its spectrum (102 SPHEREx bands sampled on the fly) and light curve.</li>
+    <li>Gaia DR3 circles are moved to each frame's date using their proper motions; AllWISE squares show where things were around 2010.</li>
+    <li>Share the exact view with <b>LINK</b>, or embed it with <b>EMBED</b> — e.g. <code>?ra=133.79&amp;dec=-7.245&amp;fov=360&amp;det=56</code>.</li>
+  </ol>
+  <p class="muted">Keys: space play/pause · ← → step · 1–6 toggle detectors · M cycle mode.</p>
+</div>
+
+<footer id="credits">
+  Data: NASA SPHEREx (IRSA / AWS Open Data) · ESA Gaia DR3 · NASA WISE/AllWISE (IRSA) · HiPS &amp; Sesame by CDS Strasbourg · Aladin Lite (CDS).
+  UI design inspired by <a href="https://github.com/bilawalsidhu/gods-eye-view" target="_blank" rel="noopener">God's Eye View</a> (MIT).
+  Built with AI assistance — see <a href="https://github.com/futurelabworks/spherex-sky-eye" id="repo-link" target="_blank" rel="noopener">README</a>.
+  Not affiliated with or endorsed by NASA.
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
