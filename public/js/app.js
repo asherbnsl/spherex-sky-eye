@@ -6,6 +6,7 @@ import { scatterChart } from './charts.js';
 import { offsetToWorld, worldToOffset } from './wcs.js';
 import { parseCoords } from './coords.js';
 import { loadWiseFrame } from './wise.js';
+import { startTour, wireTour, hasToured } from './tour.js';
 import { encodeGif } from './gif.js';
 
 const $ = s => document.querySelector(s);
@@ -153,16 +154,41 @@ async function initGlobe() {
     } else if (state.aladinGaia) { state.aladinGaia.hide(); }
   };
 }
+// Cinematic fly: pull back to a wide view, glide across, then dive in
+// (avoids the lag/jump of panning across the sky while zoomed in).
+let flySeq = 0;
 function flyGlobe() {
   const al = state.aladin; if (!al || !state.center || !state.footprint) return;
   clearInterval(state.orbit);
+  const seq = ++flySeq;
   const [ra, dec] = state.center;
-  try { al.animateToRaDec ? al.animateToRaDec(ra, dec, 2) : al.gotoRaDec(ra, dec); } catch { al.gotoRaDec(ra, dec); }
-  setTimeout(() => { try { al.zoomToFoV ? al.zoomToFoV(state.fov / 3600 * 5, 2) : al.setFoV(state.fov / 3600 * 5); } catch { al.setFoV(state.fov / 3600 * 5); } }, 300);
+  const finalFov = state.fov / 3600 * 5;
+  const [ra0, dec0] = al.getRaDec ? al.getRaDec() : [ra, dec];
+  const D = Math.PI / 180;
+  const sep = Math.acos(Math.min(1, Math.sin(dec0 * D) * Math.sin(dec * D) + Math.cos(dec0 * D) * Math.cos(dec * D) * Math.cos((ra - ra0) * D))) / D;
+  const zoom = (f, t) => { try { al.zoomToFoV ? al.zoomToFoV(f, t) : al.setFoV(f); } catch { al.setFoV(f); } };
+  const pan = (t, done) => { try { al.animateToRaDec ? al.animateToRaDec(ra, dec, t, done) : (al.gotoRaDec(ra, dec), done && done()); } catch { al.gotoRaDec(ra, dec); done && done(); } };
+  const dive = () => { if (seq === flySeq) zoom(finalFov, 2); };
+  if (sep < 3) { pan(1.2); setTimeout(dive, 400); }
+  else {
+    const wide = Math.min(180, Math.max(60, sep * 1.4));
+    zoom(wide, 1.2);
+    setTimeout(() => { if (seq !== flySeq) return; pan(Math.min(3, 1 + sep / 60)); setTimeout(dive, Math.min(3000, 1000 + sep / 60 * 1000) + 150); }, 1250);
+  }
   state.footprint.removeAll();
   const h = state.fov / 2;
   const corners = [[h, h], [-h, h], [-h, -h], [h, -h]].map(([e, n]) => offsetToWorld(ra, dec, e, n));
   state.footprint.add(window.A.polygon(corners, { color: '#ffb000' }));
+}
+
+// ---------------------------------------------------------------- SIMPLE / PRO
+const PRO_MODES = ['exposures', 'deep'];
+function setPro(on) {
+  document.body.classList.toggle('simple', !on);
+  $('#mode-btn').textContent = on ? 'SIMPLE MODE' : 'PRO MODE';
+  try { localStorage.setItem('blinkscope.mode', on ? 'pro' : 'simple'); } catch { /* storage unavailable */ }
+  if (!on && PRO_MODES.includes(state.mode)) setMode('epochs');
+  setTimeout(() => { draw(); drawAnalysis(); }, 50);
 }
 
 // ---------------------------------------------------------------- main flow
@@ -656,6 +682,9 @@ function wire() {
   $('#save-gif').onclick = saveGif;
   $('#flag').onclick = flagSource;
   $('#help-btn').onclick = () => $('#help').classList.toggle('hidden');
+  $('#tour-btn').onclick = () => startTour();
+  $('#mode-btn').onclick = () => setPro(document.body.classList.contains('simple'));
+  wireTour();
   $('#help-close').onclick = () => $('#help').classList.add('hidden');
   window.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
@@ -741,5 +770,17 @@ if (initial) {
   if (initial.ra !== undefined && Number.isFinite(initial.ra)) engage({ ra: initial.ra, dec: initial.dec, name: initial.name, keepView: true });
   else if (initial.name) { $('#q').value = initial.name; engage({ name: initial.name, keepView: state.urlHasView }); }
 } else {
-  $('#help').classList.remove('hidden');
+  // first screen: load a real example so the flipbook is never empty
+  $('#q').value = "Barnard's Star";
+  engage({ name: 'barnard' });
+}
+{
+  const p = new URLSearchParams(location.search);
+  let pro = false;
+  try { pro = localStorage.getItem('blinkscope.mode') === 'pro'; } catch { /* storage unavailable */ }
+  if (p.has('pro')) pro = p.get('pro') !== '0';
+  if (PRO_MODES.includes(state.mode)) pro = true;
+  if (document.body.classList.contains('embed')) pro = false;
+  setPro(pro);
+  if (!hasToured() && !document.body.classList.contains('embed')) setTimeout(startTour, 1500);
 }
