@@ -5,6 +5,7 @@ import { drawFrame, LOOKS, frameToDataURL } from './render.js';
 import { scatterChart } from './charts.js';
 import { offsetToWorld, worldToOffset } from './wcs.js';
 import { parseCoords } from './coords.js';
+import { loadWiseFrame } from './wise.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -17,7 +18,7 @@ const state = {
   images: [], epochs: [], cuts: [], frames: [], frameIdx: 0,
   playing: true, fps: 2, mode: 'epochs', dets: new Set([1, 2, 3, 4, 5, 6]),
   look: 'ironbow', lo: -1, hi: 20, autoHi: true, quality: 6,
-  ov: { target: true, gaia: true, wise: false, movers: true },
+  ov: { target: true, gaia: true, wise: false, movers: true, wiseFrame: true },
   gaia: [], allwise: [], probe: null, token: 0, aladin: null,
 };
 
@@ -163,7 +164,7 @@ function flyGlobe() {
 // ---------------------------------------------------------------- main flow
 async function engage(input) {
   const token = ++state.token;
-  state.cuts = []; state.frames = []; state.frameIdx = 0; state.probe = null; state.gaia = []; state.allwise = [];
+  state.cuts = []; state.frames = []; state.frameIdx = 0; state.probe = null; state.gaia = []; state.allwise = []; state.wiseFrame = null;
   $('#fb-empty').classList.remove('hidden'); $('#fb-empty').textContent = 'Locking target…';
   setProgress(0, 'resolving target');
   try {
@@ -204,6 +205,9 @@ async function engage(input) {
     flyGlobe();
     syncURL();
     loadCatalogs(token);
+    loadWiseFrame(state.center[0], state.center[1], state.fov, state.n)
+      .then(f => { if (token !== state.token) return; state.wiseFrame = f; log('unWISE ▸ WISE 2010 reference frame added (15-year baseline)', 'ok'); buildFrames(); })
+      .catch(e => log('WISE 2010 frame unavailable (' + e.message + ')', 'err'));
     await download(token);
   } catch (e) {
     if (token !== state.token) return;
@@ -311,6 +315,7 @@ function buildFrames() {
   }
   state.frames = frames;
   if (state.autoHi) autoStretch();
+  if (state.wiseFrame && state.ov.wiseFrame && (state.mode === 'epochs' || state.mode === 'exposures') && frames.length) frames.unshift(state.wiseFrame);
   if (state.frameIdx >= frames.length) state.frameIdx = 0;
   $('#fb-empty').classList.toggle('hidden', frames.length > 0);
   if (!frames.length && state.target) $('#fb-empty').textContent = 'Loading SPHEREx exposures…';
@@ -420,6 +425,7 @@ function renderTimeline() {
     tl.appendChild(el);
   });
   const seen = new Set();
+  if (fr[0] && fr[0].wise) { const el = document.createElement('div'); el.className = 'lab'; el.style.left = pos(fr[0].mjd) + '%'; el.textContent = 'WISE 2010'; tl.appendChild(el); seen.add('w'); }
   state.epochs.forEach(e => {
     const lab = fmtDate(e.tMid).slice(0, 7); if (seen.has(lab)) return; seen.add(lab);
     const el = document.createElement('div'); el.className = 'lab'; el.style.left = pos(e.tMid) + '%'; el.textContent = lab; tl.appendChild(el);
@@ -530,6 +536,7 @@ function drawAnalysis() {
 function renderMeta() {
   const f = state.frames[state.frameIdx];
   if (!f) { $('#meta').innerHTML = '<span class="muted">No frame.</span>'; return; }
+  if (f.wise) { $('#meta').innerHTML = '<span class="muted">Reference frame: unWISE coadd (Lang 2014; Meisner et al.) of NASA WISE 4.6 µm data from the 2010 AllWISE mission, via unwise.me. Compare it with the SPHEREx passes to see 15 years of motion.</span>'; return; }
   const keys = ['GHOST', 'GHOST_FPA', 'XTALK', 'PERSIST', 'SNOWBALL', 'BLOOM', 'HALO', 'TRANSIENT', 'OUTLIER', 'HOT'];
   const rows = f.cuts.slice().sort((a, b) => a.mjd - b.mjd).map(c => {
     const fl = keys.map(k => c.flagCounts['L2 N_' + k] || 0);
@@ -575,6 +582,7 @@ function wire() {
   $('#o-gaia').onchange = e => { state.ov.gaia = e.target.checked; draw(); };
   $('#o-wise').onchange = e => { state.ov.wise = e.target.checked; draw(); };
   $('#o-movers').onchange = e => { state.ov.movers = e.target.checked; draw(); };
+  $('#o-wiseframe').onchange = e => { state.ov.wiseFrame = e.target.checked; buildFrames(); };
   $('#play').onclick = () => { state.playing = !state.playing; $('#play').textContent = state.playing ? '❚❚' : '▶︎'; };
   $('#prev').onclick = () => { state.playing = false; $('#play').textContent = '▶︎'; state.frameIdx = (state.frameIdx - 1 + state.frames.length) % Math.max(1, state.frames.length); draw(); };
   $('#next').onclick = () => { state.playing = false; $('#play').textContent = '▶︎'; state.frameIdx = (state.frameIdx + 1) % Math.max(1, state.frames.length); draw(); };
