@@ -189,7 +189,7 @@ function flyGlobe() {
     const f = x < 0.35 ? lfov(startFov, wide, ease(x / 0.35)) : lfov(wide, endFov, ease((x - 0.35) / 0.65));
     al.setFoV(sep < 2 ? lfov(startFov, endFov, ease(x)) : f);
     al.gotoRaDec(pos[0], pos[1]);
-    if (x < 1) (document.hidden ? setTimeout(stepFn, 33) : requestAnimationFrame(stepFn));
+    if (x < 1) setTimeout(stepFn, 30);
     else { al.gotoRaDec(end[0], end[1]); al.setFoV(endFov); }
   };
   stepFn();
