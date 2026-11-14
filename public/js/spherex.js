@@ -55,13 +55,18 @@ function im2epoch(e) { for (const im of e.images) im.epoch = e.index; }
 // Pick which exposures to download: up to `perDet` per detector per epoch,
 // spread evenly through each epoch so we sample many wavelengths.
 export function planDownloads(epochs, dets, perDet) {
-  const out = [];
-  for (const e of epochs) for (const d of dets) {
+  // group by (pass, detector), pick evenly spaced exposures in each group, then
+  // interleave so every pass/detector gets its first exposure early (frames
+  // appear quickly and fill in as more data arrives)
+  const groups = [];
+  for (const d of dets) for (const e of epochs) {
     const list = e.images.filter(im => im.det === d);
     if (!list.length) continue;
-    const n = perDet >= list.length ? list.length : perDet;
-    for (let k = 0; k < n; k++) out.push(list[Math.floor((k + 0.5) * list.length / n)]);
+    const n = Math.min(perDet, list.length);
+    groups.push(Array.from({ length: n }, (_, k) => list[Math.floor((k + 0.5) * list.length / n)]));
   }
+  const out = [];
+  for (let k = 0; groups.some(g => g.length > k); k++) for (const g of groups) if (g[k]) out.push(g[k]);
   return out;
 }
 
@@ -136,8 +141,18 @@ export async function loadCutout(im, ra, dec, fov, n) {
   const { wcs } = img;
   const [px, py] = wcs.worldToPix(ra, dec);
   if (!(px >= 1 && px <= NX && py >= 1 && py <= NX)) return null;
-  const r = fov / 2 / wcs.pixScale * 1.42 + 3;
-  const y0 = Math.max(1, Math.floor(py - r)), y1 = Math.min(NX, Math.ceil(py + r));
+  // exact rows needed: project the border of the output grid into the detector
+  let ymin = Infinity, ymax = -Infinity;
+  const h = fov / 2;
+  for (let k = 0; k <= 16; k++) {
+    const t = -h + 2 * h * k / 16;
+    for (const [e, nn] of [[t, h], [t, -h], [h, t], [-h, t]]) {
+      const [wr, wd] = offsetToWorld(ra, dec, e, nn);
+      const [, yy] = wcs.worldToPix(wr, wd);
+      if (yy < ymin) ymin = yy; if (yy > ymax) ymax = yy;
+    }
+  }
+  const y0 = Math.max(1, Math.floor(ymin) - 2), y1 = Math.min(NX, Math.ceil(ymax) + 2);
   const f = rfile(im.s3);
   const buf = await f.read(img.dataStart + (y0 - 1) * NX * 4, (y1 - y0 + 1) * NX * 4, { cache: false });
   const raw = bigEndianFloat32(buf);

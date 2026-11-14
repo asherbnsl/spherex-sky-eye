@@ -10,20 +10,22 @@ export const CONFIG = {
   collections: ['spherex_dr1'],    // IRSA SIA collections to search
   pixelScale: 6.15,                // SPHEREx native pixel size, arcsec
   concurrency: 6,                  // parallel range requests to AWS
+  aladinModule: 'https://cdn.jsdelivr.net/npm/aladin-lite@3.8.2/dist/aladin.js',
   defaultFov: 300,                 // arcsec
   epochGapDays: 30,                // gap that separates two survey passes
+  // All-sky globe layers. Each is probed at start-up; unreachable mirrors are
+  // skipped automatically and the first working layer is used.
   allSkyLayers: [
-    { id: 'CDS/P/SPHEREx/QR2/color', name: 'SPHEREx · colour (all-sky)' },
-    { id: 'CDS/P/SPHEREx/QR2/D1', name: 'SPHEREx · D1 0.75–1.09 µm' },
-    { id: 'CDS/P/SPHEREx/QR2/D2', name: 'SPHEREx · D2 1.10–1.62 µm' },
-    { id: 'CDS/P/SPHEREx/QR2/D3', name: 'SPHEREx · D3 1.63–2.41 µm' },
-    { id: 'CDS/P/SPHEREx/QR2/D4', name: 'SPHEREx · D4 2.42–3.82 µm' },
-    { id: 'CDS/P/SPHEREx/QR2/D5', name: 'SPHEREx · D5 3.83–4.41 µm' },
-    { id: 'CDS/P/SPHEREx/QR2/D6', name: 'SPHEREx · D6 4.42–5.00 µm' },
-    { id: 'CDS/P/allWISE/color', name: 'WISE · AllWISE colour' },
-    { id: 'CDS/P/unWISE/color-W2-W1W2-W1', name: 'WISE · unWISE colour' },
-    { id: 'CDS/P/2MASS/color', name: '2MASS · colour' },
-    { id: 'CDS/P/DSS2/color', name: 'DSS2 · optical' },
+    { name: 'SPHEREx · colour (all-sky)', urls: ['https://alasky.cds.unistra.fr/SPHEREx/color', 'https://alaskybis.cds.unistra.fr/SPHEREx/color'] },
+    { name: 'SPHEREx · D1 0.75–1.09 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D1'] },
+    { name: 'SPHEREx · D2 1.10–1.62 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D2'] },
+    { name: 'SPHEREx · D3 1.63–2.41 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D3'] },
+    { name: 'SPHEREx · D4 2.42–3.82 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D4'] },
+    { name: 'SPHEREx · D5 3.83–4.41 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D5'] },
+    { name: 'SPHEREx · D6 4.42–5.00 µm', urls: ['https://alasky.cds.unistra.fr/SPHEREx/D6'] },
+    { name: 'WISE · AllWISE colour', urls: ['https://cdn.skies.esac.esa.int/AllWISEColor', 'https://alasky.cds.unistra.fr/AllWISE/RGB-W4-W2-W1'] },
+    { name: '2MASS · near-IR colour', urls: ['https://cdn.skies.esac.esa.int/2MASSColor', 'https://alasky.cds.unistra.fr/2MASS/Color'] },
+    { name: 'DSS2 · optical colour', urls: ['https://casda.csiro.au/hips/DSS2/color', 'https://alasky.cds.unistra.fr/DSS/DSSColor'] },
   ],
   detectors: [
     { d: 1, wl: '0.75–1.09', color: '#7aa2ff' },

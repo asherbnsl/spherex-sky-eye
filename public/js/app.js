@@ -16,7 +16,7 @@ const state = {
   fov: CONFIG.defaultFov, n: 64,
   images: [], epochs: [], cuts: [], frames: [], frameIdx: 0,
   playing: true, fps: 2, mode: 'epochs', dets: new Set([1, 2, 3, 4, 5, 6]),
-  look: 'ironbow', lo: -1, hi: 20, quality: 2,
+  look: 'ironbow', lo: -1, hi: 20, autoHi: true, quality: 6,
   ov: { target: true, gaia: true, wise: false, movers: true },
   gaia: [], allwise: [], probe: null, token: 0, aladin: null,
 };
@@ -85,7 +85,7 @@ function readURL() {
   if (p.has('det')) state.dets = new Set([...p.get('det')].map(Number).filter(d => d >= 1 && d <= 6));
   if (p.has('mode')) state.mode = p.get('mode');
   if (p.has('look') && LOOKS[p.get('look')]) state.look = p.get('look');
-  if (p.has('q')) state.quality = +p.get('q') || 2;
+  if (p.has('q')) state.quality = +p.get('q') || 6;
   if (p.has('ra') && p.has('dec')) return { ra: +p.get('ra'), dec: +p.get('dec'), name: p.get('name') || null };
   if (p.has('target')) return { name: p.get('target') };
   return null;
@@ -96,39 +96,51 @@ function viewURL(embed = false) {
   if (t) { p.set('ra', t.ra.toFixed(6)); p.set('dec', t.dec.toFixed(6)); if (t.name) p.set('name', t.name); }
   if (t && t.preset) { p.delete('ra'); p.delete('dec'); p.delete('name'); p.set('target', t.preset.key); }
   p.set('fov', state.fov); p.set('det', [...state.dets].sort().join('')); p.set('mode', state.mode); p.set('look', state.look);
-  if (state.quality !== 2) p.set('q', state.quality);
+  if (state.quality !== 6) p.set('q', state.quality);
   if (embed) p.set('embed', '1');
   return location.origin + location.pathname + '?' + p.toString();
 }
 function syncURL() { history.replaceState(null, '', viewURL()); }
 
 // ---------------------------------------------------------------- globe
-function initGlobe() {
+async function probe(url, ms = 5000) {
+  try {
+    const r = await Promise.race([fetch(url + '/properties'), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
+    return r.ok;
+  } catch { return false; }
+}
+async function initGlobe() {
   const sel = $('#layer');
-  CONFIG.allSkyLayers.forEach(l => sel.add(new Option(l.name, l.id)));
-  const start = () => {
-    if (!window.A) { log('Sky globe library failed to load — flipbook still works', 'err'); return; }
-    A.init.then(() => {
-      state.aladin = A.aladin('#sky', {
-        survey: CONFIG.allSkyLayers[0].id, fov: 200, projection: 'SIN', cooFrame: 'ICRSd',
-        showReticle: true, reticleColor: '#00e5ff', showLayersControl: false, showGotoControl: false,
-        showFullscreenControl: false, showShareControl: false, showFrame: false, showZoomControl: false,
-        showSimbadPointerControl: false, showProjectionControl: false, showCooGridControl: false, showContextMenu: true,
-        target: '266.4 -29.0',
-      });
-      state.footprint = A.graphicOverlay({ color: '#ffb000', lineWidth: 2 });
-      state.aladin.addOverlay(state.footprint);
-      log('Sky globe online · SPHEREx all-sky HiPS (CDS)', 'ok');
-      // idle "orbit" until the first target lock
-      let ra = 266.4;
-      state.orbit = setInterval(() => { if (state.target) return clearInterval(state.orbit); ra = (ra + 0.25) % 360; state.aladin.gotoRaDec(ra, -10); }, 50);
-      if (state.target) flyGlobe();
-    });
-  };
-  if (window.A) start(); else window.addEventListener('load', start);
-  sel.onchange = () => state.aladin && state.aladin.setImageSurvey(sel.value);
+  // probe every layer's mirrors in parallel; keep the first that answers
+  const layers = await Promise.all(CONFIG.allSkyLayers.map(async l => {
+    for (const u of l.urls) if (await probe(u)) return { ...l, url: u };
+    return { ...l, url: null };
+  }));
+  layers.forEach((l, i) => { const o = new Option(l.name + (l.url ? '' : ' (offline)'), i); o.disabled = !l.url; sel.add(o); });
+  const first = layers.findIndex(l => l.url);
+  if (first < 0) { log('All-sky map servers unreachable — globe disabled, flipbook still works', 'err'); return; }
+  sel.value = first;
+  if (first > 0) log('SPHEREx all-sky maps (CDS) unreachable — globe using ' + layers[first].name, 'err');
+  let A;
+  try { A = (await import(CONFIG.aladinModule)).default; await A.init; }
+  catch (e) { log('Sky globe library failed to load — flipbook still works', 'err'); return; }
+  window.A = A;
+  state.aladin = A.aladin('#sky', {
+    survey: layers[first].url, fov: 200, projection: 'SIN', cooFrame: 'ICRSd',
+    showReticle: true, reticleColor: '#00e5ff', showLayersControl: false, showGotoControl: false,
+    showFullscreenControl: false, showShareControl: false, showFrame: false, showZoomControl: false,
+    showSimbadPointerControl: false, showProjectionControl: false, showCooGridControl: false, showContextMenu: true,
+    target: '266.4 -29.0',
+  });
+  state.footprint = A.graphicOverlay({ color: '#ffb000', lineWidth: 2 });
+  state.aladin.addOverlay(state.footprint);
+  log('Sky globe online · ' + layers[first].name, 'ok');
+  let ra = 266.4;
+  state.orbit = setInterval(() => { if (state.target) return clearInterval(state.orbit); ra = (ra + 0.25) % 360; state.aladin.gotoRaDec(ra, -10); }, 50);
+  if (state.target && state.center) flyGlobe();
+  sel.onchange = () => { const l = layers[+sel.value]; if (l.url) state.aladin.setBaseImageLayer(A.imageHiPS(l.url, { name: l.name })); };
   $('#aladin-gaia').onchange = e => {
-    if (!state.aladin || !state.target) return;
+    if (!state.target) return;
     if (e.target.checked) {
       state.aladinGaia = A.catalogFromVizieR('I/355/gaiadr3', `${state.center[0]} ${state.center[1]}`, state.fov / 3600, { name: 'Gaia DR3', sourceSize: 10, color: '#39ff88', onClick: 'showTable' });
       state.aladin.addCatalog(state.aladinGaia);
@@ -136,7 +148,7 @@ function initGlobe() {
   };
 }
 function flyGlobe() {
-  const al = state.aladin; if (!al || !state.center) return;
+  const al = state.aladin; if (!al || !state.center || !state.footprint) return;
   clearInterval(state.orbit);
   const [ra, dec] = state.center;
   try { al.animateToRaDec ? al.animateToRaDec(ra, dec, 2) : al.gotoRaDec(ra, dec); } catch { al.gotoRaDec(ra, dec); }
@@ -144,7 +156,7 @@ function flyGlobe() {
   state.footprint.removeAll();
   const h = state.fov / 2;
   const corners = [[h, h], [-h, h], [-h, -h], [h, -h]].map(([e, n]) => offsetToWorld(ra, dec, e, n));
-  state.footprint.add(A.polygon(corners, { color: '#ffb000' }));
+  state.footprint.add(window.A.polygon(corners, { color: '#ffb000' }));
 }
 
 // ---------------------------------------------------------------- main flow
@@ -201,7 +213,7 @@ async function engage(input) {
 }
 
 function estimateBytes() {
-  const rows = 2 * (state.fov / 2 / CONFIG.pixelScale * 1.42 + 3) + 1;
+  const rows = state.fov / CONFIG.pixelScale * 1.2 + 5;
   return rows * 2040 * 4 + 46080;
 }
 
@@ -210,7 +222,7 @@ async function download(token) {
   const wanted = state.mode === 'rgb' ? dets : [...state.dets];
   state.inflight ||= new Set();
   if (state.inflightToken !== token) { state.inflight = new Set(); state.inflightToken = token; }
-  const plan = SX.planDownloads(state.epochs, wanted, state.quality)
+  const plan = SX.planDownloads(state.epochs, wanted, Math.ceil(state.quality / wanted.length))
     .filter(im => !state.inflight.has(im.id) && !state.cuts.some(c => c.im.id === im.id));
   plan.forEach(im => state.inflight.add(im.id));
   if (!plan.length) return;
@@ -297,12 +309,29 @@ function buildFrames() {
     }).filter(Boolean);
   }
   state.frames = frames;
+  if (state.autoHi) autoStretch();
   if (state.frameIdx >= frames.length) state.frameIdx = 0;
   $('#fb-empty').classList.toggle('hidden', frames.length > 0);
   if (!frames.length && state.target) $('#fb-empty').textContent = 'Loading SPHEREx exposures…';
   renderTimeline();
   draw();
   if (state.probe) updateAnalysis();
+}
+
+// One white level for the whole sequence so blinking compares like with like
+const sliderToHi = v => 3 * 10 ** (v / 33);
+const hiToSlider = h => Math.round(33 * Math.log10(h / 3));
+function autoStretch() {
+  const vals = [];
+  for (const f of state.frames) {
+    const chans = f.kind === 'rgb' ? [f.r, f.g, f.b].filter(Boolean).map(c => c.data) : [f.data];
+    for (const d of chans) for (let k = 0; k < d.length; k += 3) if (Number.isFinite(d[k])) vals.push(f.kind === 'diff' ? Math.abs(d[k]) : d[k]);
+  }
+  if (vals.length < 20) return;
+  vals.sort((a, b) => a - b);
+  const p = vals[Math.floor(vals.length * 0.995)];
+  state.hi = Math.max(8, Math.min(3000, p * 1.2));
+  $('#hi').value = hiToSlider(state.hi);
 }
 
 // ---------------------------------------------------------------- drawing
@@ -538,7 +567,8 @@ function wire() {
   $('#look').value = state.look;
   $('#look').onchange = e => { state.look = e.target.value; syncURL(); draw(); };
   $('#lo').oninput = e => { state.lo = +e.target.value; draw(); };
-  $('#hi').oninput = e => { state.hi = +e.target.value; draw(); };
+  $('#hi').oninput = e => { state.hi = sliderToHi(+e.target.value); state.autoHi = false; $('#auto').checked = false; draw(); };
+  $('#auto').onchange = e => { state.autoHi = e.target.checked; if (state.autoHi) autoStretch(); draw(); };
   $('#pix').onchange = e => $('#fb-img').classList.toggle('pix', e.target.checked);
   $('#o-target').onchange = e => { state.ov.target = e.target.checked; draw(); };
   $('#o-gaia').onchange = e => { state.ov.gaia = e.target.checked; draw(); };
