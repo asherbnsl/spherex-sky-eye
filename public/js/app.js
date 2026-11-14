@@ -189,7 +189,9 @@ async function engage(input) {
     // search near the target's present-day position
     const now = SX.propagate(t.ra, t.dec, t.pmra, t.pmdec, t.epoch, 2025.9);
     setProgress(0.03, 'querying NASA/IPAC archive (IRSA)…');
-    const images = (await SX.searchImages(now[0], now[1])).filter(im => im.s3);
+    const found = await SX.searchImages(now[0], now[1], t.preset?.key);
+    if (found.fromSnapshot) log(`IRSA search busy — using saved archive listing (${found[0]?.snapshot})`, 'err');
+    const images = found.filter(im => im.s3);
     if (token !== state.token) return;
     if (!images.length) throw new Error('No SPHEREx exposures cover this position yet');
     state.images = images;

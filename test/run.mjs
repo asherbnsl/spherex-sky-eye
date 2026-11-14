@@ -4,6 +4,7 @@ import { parseCoords } from '../public/js/coords.js';
 import { TanSip, offsetToWorld, worldToOffset } from '../public/js/wcs.js';
 import { parseCards, dataSize } from '../public/js/fits.js';
 import { parseCSV } from '../api/_lib.js';
+import { toS3 } from '../api/sia.js';
 
 globalThis.location = { hostname: 'test' };
 const SX = await import('../public/js/spherex.js');
@@ -62,5 +63,23 @@ t('wavelength lookup bilinear', () => {
   const X = [1, 2040], Y = [1, 2040], V = [1, 0.1, 1, 0.1, 2, 0.2, 2, 0.2];
   // 2x2 grid with nx=2: V index k + 2*(ix + 2*iy)
   const r = SX.lambdaAt({ X, Y, V }, 1000, 1020.5); assert.ok(Math.abs(r.wl - 1.5) < 1e-3, r.wl);
+});
+t('IRSA SIA CSV with unescaped cloud_access JSON keeps earlier columns + S3 mapping', () => {
+  const head = 'obs_id,energy_bandpassname,t_min,access_url,cloud_access,o_ucd,upload_row_id';
+  const row = '2025W36_1A_0095_1,SPHEREx-D1,60919.419647,https://irsa.ipac.caltech.edu/ibe/data/spherex/dr1/level2/2025W36_1A/l2b-v27-2026-232/1/x.fits,{"aws": {"bucket_name": "nasa-irsa-spherex", "key":"dr1/level2/2025W36_1A/l2b-v27-2026-232/1/x.fits", "region": "us-east-1"}},,1';
+  const [r] = parseCSV(head + '\n' + row + '\n' + row + '\n');
+  assert.equal(r.t_min, '60919.419647');
+  assert.equal(toS3(r.access_url), 'https://nasa-irsa-spherex.s3.amazonaws.com/dr1/level2/2025W36_1A/l2b-v27-2026-232/1/x.fits');
+  assert.equal(parseCSV(head + '\n' + row + '\n' + row + '\n').length, 2);
+});
+import { readFileSync } from 'node:fs';
+t('snapshot of challenge targets is complete and well-formed', () => {
+  const snap = JSON.parse(readFileSync(new URL('../public/data/snapshot.json', import.meta.url)));
+  const want = { barnard: 239, epsindib: 345, wise0855: 258, rwaur: 226, rdra: 413 };
+  for (const [k, n] of Object.entries(want)) assert.equal(snap.targets[k].length, n, k);
+  const [obs, det, tt, ver] = snap.targets.barnard.find(r => r[0] === '2025W33_2C_0321_1' && r[1] === 6);
+  const week = obs.split('_').slice(0, 2).join('_');
+  assert.equal(`dr1/level2/${week}/l2b${ver}/${det}/level2_${obs}D${det}_spx_l2b${ver}.fits`, 'dr1/level2/2025W33_2C/l2b-v27-2026-228/6/level2_2025W33_2C_0321_1D6_spx_l2b-v27-2026-228.fits');
+  assert.ok(Math.abs(tt - 60902.86472) < 1e-4);
 });
 console.log(`\n${n} tests passed`);

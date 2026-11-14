@@ -9,7 +9,36 @@ const NX = 2040;
 const files = new Map();
 function rfile(url) { if (!files.has(url)) files.set(url, new RangeFile(url)); return files.get(url); }
 
-export async function searchImages(ra, dec) {
+// Snapshot of the archive listing for the challenge test targets, used only
+// when the live IRSA search is down (keeps the demo targets working).
+let snapshot = null;
+async function fromSnapshot(key) {
+  if (!key) return null;
+  snapshot ||= fetch(new URL('../data/snapshot.json', import.meta.url)).then(r => r.ok ? r.json() : null).catch(() => null);
+  const snap = await snapshot;
+  const list = snap?.targets?.[key];
+  if (!list) return null;
+  const base = 'https://nasa-irsa-spherex.s3.amazonaws.com/';
+  const wl = { 1: [0.7455, 1.1167], 2: [1.1033, 1.6499], 3: [1.6301, 2.4346], 4: [2.4027, 3.8473], 5: [3.8113, 4.4300], 6: [4.4115, 5.0096] };
+  const images = list.map(([obs, det, t, ver]) => {
+    const week = obs.split('_').slice(0, 2).join('_');
+    const key2 = `${snap.release}/level2/${week}/l2b${ver}/${det}/level2_${obs}D${det}_spx_l2b${ver}.fits`;
+    return { id: obs + '/' + det, obs, det, t, tEnd: t + 0.0013, exp: 113.58, wlMin: wl[det][0], wlMax: wl[det][1], url: 'https://irsa.ipac.caltech.edu/ibe/data/spherex/' + key2, s3: base + key2, snapshot: snap.date };
+  });
+  return images.sort((a, b) => a.t - b.t);
+}
+
+export async function searchImages(ra, dec, presetKey) {
+  try {
+    return await liveSearch(ra, dec);
+  } catch (e) {
+    const snap = await fromSnapshot(presetKey);
+    if (snap) { snap.fromSnapshot = true; return snap; }
+    throw e;
+  }
+}
+
+async function liveSearch(ra, dec) {
   // When the page itself is served from IRSA (test harness) we can query SIA directly.
   if (location.hostname === 'irsa.ipac.caltech.edu') return directSia(ra, dec);
   const u = `${CONFIG.apiBase}/api/sia?ra=${ra.toFixed(6)}&dec=${dec.toFixed(6)}&collections=${CONFIG.collections.join(',')}`;
@@ -38,10 +67,9 @@ async function directSia(ra, dec) {
     const f = []; let cur = '', q2 = false;
     for (let i = 0; i < l.length; i++) { const ch = l[i]; if (ch === '"') { if (q2 && l[i + 1] === '"') { cur += '"'; i++; } else q2 = !q2; } else if (ch === ',' && !q2) { f.push(cur); cur = ''; } else cur += ch; }
     f.push(cur);
-    if (f.length < head.length - 2) continue;
+    if (f.length < idx('access_url') + 1) continue;
     const det = +f[idx('energy_bandpassname')].replace(/\D/g, '');
-    let s3 = f[idx('access_url')];
-    try { const ca = JSON.parse(f[idx('cloud_access')]); s3 = `https://${ca.aws.bucket_name}.s3.amazonaws.com/${ca.aws.key}`; } catch { }
+    const s3 = f[idx('access_url')].replace('https://irsa.ipac.caltech.edu/ibe/data/spherex/', 'https://nasa-irsa-spherex.s3.amazonaws.com/');
     out.push({ id: f[idx('obs_id')] + '/' + det, obs: f[idx('obs_id')], det, t: +f[idx('t_min')], tEnd: +f[idx('t_max')], exp: +f[idx('t_exptime')], wlMin: f[idx('em_min')] * 1e6, wlMax: f[idx('em_max')] * 1e6, url: f[idx('access_url')], s3, released: f[idx('obs_release_date')] });
   }
   return out.sort((a, b) => a.t - b.t);
