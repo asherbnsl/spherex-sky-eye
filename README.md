@@ -55,7 +55,7 @@ browser ──────────────▶ CDS Sesame (names), CDS Hi
 
 ```bash
 node server.mjs          # http://localhost:8080   (Node 18+)
-npm test                 # 16 unit tests: WCS, coordinate parsing, FITS cards, CSV quirks, stacking, photometry, wavelength lookup, snapshot
+npm test                 # 15 unit tests: WCS, coordinate parsing, FITS cards, CSV quirks, stacking, photometry, wavelength lookup, snapshot
 ```
 
 Deploy: import the repo into Vercel (framework preset "Other"). `public/` is served statically and `api/*.js` become serverless functions.
