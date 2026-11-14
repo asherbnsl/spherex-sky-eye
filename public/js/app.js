@@ -542,7 +542,8 @@ async function updateAnalysis() {
   if (seq !== analysisSeq) return;
   state.analysisPts = pts;
   const sat = pts.filter(p => p.saturated).length;
-  if (sat) $('#probe-txt').innerHTML += ` · <span class="warn">saturated in ${sat} exposures — PSF-wing photometry (relative brightness)</span>`;
+  $('#probe-txt').querySelector('.warn')?.remove();
+  if (sat) $('#probe-txt').insertAdjacentHTML('beforeend', `<span class="warn"> · saturated in ${sat} exposures — PSF-wing photometry (relative brightness)</span>`);
   drawAnalysis();
 }
 function drawAnalysis() {
