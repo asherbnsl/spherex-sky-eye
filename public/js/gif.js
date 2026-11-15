@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Minimal animated-GIF encoder (GIF89a, LZW) — no dependencies.
 // Frames are RGBA ImageData of equal size; colours are mapped to a fixed
 // 6x7x6 palette (252 colours), which is plenty for these false-colour maps.

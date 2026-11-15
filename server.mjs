@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Local server: serves the static app from ./public and the proxy API from ./api.
 // Usage:  node server.mjs   ->  http://localhost:8080
 import http from 'node:http';

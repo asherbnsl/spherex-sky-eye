@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Image display: stretches, sensor-style colour maps, RGB composites.
 
 function lut(stops) {

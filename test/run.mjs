@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Unit tests for the pure-math parts (no network). Run: npm test
 import assert from 'node:assert/strict';
 import { parseCoords } from '../public/js/coords.js';

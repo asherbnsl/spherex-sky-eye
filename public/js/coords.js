@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Parse decimal or sexagesimal 'RA Dec' strings.
 export function parseCoords(str) {
   const s = str.trim().replace(/−/g, '-').replace(/[,;]/g, ' ').replace(/\s+/g, ' ');

@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // ---------------------------------------------------------------------------
 // One place to update when new SPHEREx data releases arrive.
 // Add a new IRSA collection name (e.g. 'spherex_dr2') to `collections` and the

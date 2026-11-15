@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // 30-second guided tour: spotlights one part of the screen at a time.
 const STEPS = [
   { sel: ['#search', '#presets'], text: '<b>Start here.</b> Type any star name or sky coordinates (RA Dec) in the <b>search box</b> and press ENGAGE, or click one of the <b>challenge targets</b> below it.' },

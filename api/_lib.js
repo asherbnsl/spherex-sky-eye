@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Shared helpers for the tiny proxy API (Vercel functions + local server.mjs).
 // IRSA and some catalogue services do not send CORS headers, so the browser
 // cannot call them directly; these functions forward a fixed, whitelisted

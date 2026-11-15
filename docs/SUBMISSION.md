@@ -36,16 +36,33 @@ SPHEREx images are 65 MB files. BLINKSCOPE never downloads them whole: it reads 
 
 **Tested on** Barnard's Star, Epsilon Indi B, WISE 0855−0714, RW Aurigae and R Draconis (one-click buttons in the app). WISE 0855, the coldest known brown dwarf, is detected at S/N 10–14 in every SPHEREx pass at its predicted moving position.
 
+**What the prototype demonstrates today**
+- Works live on real NASA data for all five challenge targets (plus Luhman 16), in any browser.
+- Detects WISE 0855−0714, the coldest known brown dwarf, at S/N 10–14 in every SPHEREx pass at its predicted moving position.
+- Shows 15 years of motion (WISE 2010 → SPHEREx 2026), spectra, light curves, contamination flags; keeps working when NASA's archive search is down.
+
+**What is future work (not built yet)**
+- Automatic sky-wide search for movers (comparing SPHEREx with Gaia and WISE everywhere).
+- Asteroid and comet mode using predicted orbits.
+- A moderated public list of community flags (today, flags open public GitHub issues).
+- Calibrated photometry for very bright, saturated stars (today it is relative).
+
 **Benefits / goals** Anyone, without software or astronomy training, can inspect SPHEREx data for movers and variables within seconds, and share or embed what they find, in the spirit of Backyard Worlds-style citizen science.
 
 **Tools** JavaScript (ES modules, no framework), HTML/CSS canvas, Node.js serverless functions (Vercel), Aladin Lite v3, IRSA SIA/TAP, ESA Gaia TAP, CDS Sesame and HiPS.
 
 ## NASA Data
-- SPHEREx Level 2 spectral images, DR1 — NASA/IPAC Infrared Science Archive (IRSA) search service and NASA's AWS Open Data bucket `nasa-irsa-spherex`.
-- IRSA SPHEREx tutorial notebooks (file structure, spectral WCS, cutouts).
-- AllWISE Source Catalog and WISE/unWISE all-sky maps (NASA WISE mission).
-- unWISE coadds of NASA WISE data (unwise.me) for the 2010 reference frame.
-- WiseView (byw.tools/wiseview) as the inspiration for the flipbook interface.
+How each NASA resource is used (problem → what the resource provides → how it shapes BLINKSCOPE):
+
+| Resource | Problem | What it provides | How it shapes the solution |
+|---|---|---|---|
+| **SPHEREx Level 2 spectral images** (DR1 + newest Quick Release QR3) | New moving and variable objects hide among a billion sources | All-sky images every ~6 months in 102 infrared bands (0.75–5 µm) | The frames of the flipbook, the detector stacks, the DIFF images and the on-the-fly spectra |
+| **NASA/IPAC IRSA archive (SIA search)** | Which of millions of exposures cover a given spot? | Lists every SPHEREx exposure over a position with its date, detector and wavelength | Finds 200–400 exposures per target and groups them into 6-month passes |
+| **NASA AWS Open Data copy of SPHEREx** (`nasa-irsa-spherex`) | 65 MB per file is too slow for a browser | Public files that allow partial (range) reads | We read only ~0.5 MB around the target, so a flipbook loads in ~3 s with nothing to install |
+| **IRSA SPHEREx tutorial notebooks** | Understanding the file format | File structure, astrometry (WCS), per-pixel wavelength table and quality flags | Our in-browser FITS/WCS reader, wavelength lookup and contamination-flag decoder |
+| **NASA WISE / AllWISE** (catalogue, and unWISE coadds of WISE data) | One year of SPHEREx data shows only small motions | 2010 infrared images and positions | The WISE 2010 first frame gives a 15-year baseline: Barnard's Star jumps 2.7′ |
+| **WiseView** | How should the public look at time-series sky data? | A proven flipbook interface used for hundreds of discoveries | The model for BLINKSCOPE's blink/flipbook design |
+| **CFITSIO** (NASA HEASARC) | SPHEREx quality flags are Rice-compressed | The reference Rice (RICE_1) algorithm | Our in-browser decoder that reads per-pixel contamination flags |
 
 ## Space Agency Partner Data and Other References
 - ESA Gaia DR3 (ESA Gaia Archive).
@@ -53,6 +70,8 @@ SPHEREx images are 65 MB files. BLINKSCOPE never downloads them whole: it reads 
 - CDS Strasbourg: SPHEREx all-sky HiPS maps, Aladin Lite v3, Sesame name resolver, 2MASS/DSS2 HiPS.
 - God's Eye View by Bilawal Sidhu (MIT) — UI design inspiration only, no code reused.
 - Google Fonts: JetBrains Mono, Orbitron (OFL).
+- Tools: Node.js, Vercel (hosting and serverless functions), GitHub, jsDelivr CDN; astropy (used only to create a test file for the flag decoder); Google Chrome headless (rendering the backup slide deck).
+- unWISE: Lang (2014); Meisner, Lang & Schlegel (2017).
 
 ## Use of Super Intelligence (SI)
-Yes. An AI coding assistant (Claude by Anthropic) wrote and debugged much of the code under my direction (FITS/WCS reader, RICE decoder, proxy functions, UI), drafted the README and assembled a backup slide deck from real screenshots of the app. The core concept (a God's-Eye-View-style viewer for SPHEREx built around the challenge's suggestions), feature choices and testing direction are mine. The AI also suggested the project name and a few feature ideas (WISE 2010 reference frame, DIFF colour scheme, reports via GitHub issues). This is acknowledged in the README and the site footer. The demo video is my own screen recording. No AI-generated imagery: all images are real NASA data rendered by the app.
+Yes. An AI coding assistant (Claude by Anthropic) wrote and debugged much of the code under my direction (FITS/WCS reader, RICE decoder, proxy functions, UI), drafted the README and assembled a backup slide deck from real screenshots of the app. The core concept (a God's-Eye-View-style viewer for SPHEREx built around the challenge's suggestions), feature choices and testing direction are mine. The AI also suggested the project name and a few feature ideas (WISE 2010 reference frame, DIFF colour scheme, reports via GitHub issues). This is acknowledged in the README, the site footer, the page metadata and a disclosure line at the top of every source file. The demo video is my own screen recording. No AI-generated imagery: all images are real NASA data rendered by the app.

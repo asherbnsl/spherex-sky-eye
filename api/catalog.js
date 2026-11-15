@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // GET /api/catalog?cat=gaia|allwise&ra=..&dec=..&r=<deg>
 // Cone search of reference catalogues used as overlays:
 //   gaia    -> ESA Gaia DR3 (positions at epoch 2016.0 + proper motions)

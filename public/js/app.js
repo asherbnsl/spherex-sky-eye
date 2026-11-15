@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // BLINKSCOPE — main controller: search, download, flipbook, overlays, analysis.
 import { CONFIG } from './config.js';
 import * as SX from './spherex.js';

@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // SPHEREx data layer: archive search (via our proxy), range-read cutouts from
 // NASA's public AWS copy of SPHEREx, reprojection to a common north-up grid,
 // per-detector wavelength lookup, stacking and photometry.

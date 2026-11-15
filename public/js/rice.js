@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // FITS tile-compressed images: RICE_1 decoder (port of cfitsio fits_rdecomp
 // for 32-bit integers) and a helper that reads only the rows (tiles) it needs
 // from a remote file via HTTP Range requests. Used for SPHEREx FLAGS.

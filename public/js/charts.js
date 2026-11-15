@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Lightweight canvas scatter/line charts (no dependencies), HUD-styled.
 
 export function scatterChart(canvas, { series, xLabel, yLabel, xFmt = v => v.toFixed(2), yFmt, title, logY = false, xRange }) {

@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // TAN-SIP world coordinate system (FITS Paper II + SIP convention).
 const D2R = Math.PI / 180, R2D = 180 / Math.PI;
 

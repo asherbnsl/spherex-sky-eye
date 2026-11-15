@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // WISE reference epoch: unWISE W2 (4.6 µm) coadd of the original 2010 AllWISE
 // mission data, from the public unWISE cutout service (unwise.me). Prepending
 // it to the SPHEREx flipbook gives a ~15-year baseline, like WiseView.

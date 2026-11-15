@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // GET /api/sia?ra=..&dec=..&collections=spherex_dr1
 // Lists every SPHEREx spectral image covering a sky position (IRSA SIA v2),
 // returned as compact JSON with direct links to NASA's AWS copy of each file.

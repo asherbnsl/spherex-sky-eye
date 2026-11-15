@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // GET /api/resolve?name=Barnard's Star
 // Name -> J2000 position + proper motion, via the CDS Sesame name resolver.
 import { rateLimited, getQuery, send, fetchText } from './_lib.js';

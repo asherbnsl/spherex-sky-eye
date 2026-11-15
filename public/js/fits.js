@@ -1,3 +1,4 @@
+// SI disclosure: written with AI assistance (Claude, Anthropic) under the direction of Arsh Bansal (Team Shrapnel); reviewed and tested by the team.
 // Minimal FITS reader built around HTTP Range requests.
 // Reads only the bytes it needs from very large multi-extension SPHEREx files.
 
