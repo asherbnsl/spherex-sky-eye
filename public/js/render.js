@@ -47,9 +47,18 @@ export function drawFrame(canvas, frame, opts) {
       d[4 * k + 3] = 255;
     }
   } else if (frame.kind === 'diff') {
-    const w = Math.max(2.5, hi * 0.6);
+    // Only show changes that clearly stand out from this frame's own noise:
+    // below ~3x the noise is drawn black, so real movers appear as clean
+    // red (now) / blue (before) pairs instead of a speckled background.
+    if (frame.noise === undefined) {
+      const a = []; for (let k = 0; k < frame.data.length; k += 2) { const v = frame.data[k]; if (Number.isFinite(v)) a.push(Math.abs(v)); }
+      a.sort((x, y) => x - y);
+      frame.noise = (a.length ? a[a.length >> 1] : 1) * 1.4826 || 1;
+    }
+    const t = 3 * frame.noise, w = 4 * frame.noise;
     for (let k = 0; k < n * n; k++) {
-      const v = frame.data[k];
+      const v0 = frame.data[k];
+      const v = Number.isFinite(v0) ? Math.sign(v0) * Math.max(0, Math.abs(v0) - t) : NaN;
       const s = Number.isFinite(v) ? Math.max(0, Math.min(255, Math.round(127.5 + 127.5 * Math.tanh(v / w)))) : 127;
       d[4 * k] = DIVERGE[s * 3]; d[4 * k + 1] = DIVERGE[s * 3 + 1]; d[4 * k + 2] = DIVERGE[s * 3 + 2]; d[4 * k + 3] = 255;
     }
