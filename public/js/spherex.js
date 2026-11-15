@@ -30,21 +30,31 @@ async function fromSnapshot(key) {
 }
 
 export async function searchImages(ra, dec, presetKey) {
-  try {
-    return await liveSearch(ra, dec);
-  } catch (e) {
-    const snap = await fromSnapshot(presetKey);
-    if (snap) { snap.fromSnapshot = true; return snap; }
-    throw e;
+  // Live archive first. For the challenge targets, if IRSA hasn't answered
+  // within 6 s (or fails), use the saved listing so the demo never stalls.
+  const live = liveSearch(ra, dec);
+  const snapP = presetKey ? fromSnapshot(presetKey) : Promise.resolve(null);
+  const useSnap = async () => { const s = await snapP; if (s) { s.fromSnapshot = true; return s; } return null; };
+  if (presetKey) {
+    const winner = await Promise.race([
+      live.then(v => ({ v }), e => ({ e })),
+      new Promise(res => setTimeout(() => res({ slow: true }), 6000)),
+    ]);
+    if (winner.v) return winner.v;
+    const s = await useSnap();
+    if (s) return s;
+    if (winner.e) throw winner.e;
   }
+  return live;
 }
 
 async function liveSearch(ra, dec) {
   // When the page itself is served from IRSA (test harness) we can query SIA directly.
   if (location.hostname === 'irsa.ipac.caltech.edu') return directSia(ra, dec);
   const u = `${CONFIG.apiBase}/api/sia?ra=${ra.toFixed(6)}&dec=${dec.toFixed(6)}&collections=${CONFIG.collections.join(',')}`;
-  let r = await fetch(u);
-  if (!r.ok) { await new Promise(res => setTimeout(res, 2000)); r = await fetch(u); }
+  const get = () => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000); return fetch(u, { signal: c.signal }).finally(() => clearTimeout(t)); };
+  let r = await get();
+  if (!r.ok) { await new Promise(res => setTimeout(res, 2000)); r = await get(); }
   if (!r.ok) throw new Error('NASA archive search is busy (' + r.status + ') — try again in a minute');
   const j = await r.json();
   return j.images.sort((a, b) => a.t - b.t);

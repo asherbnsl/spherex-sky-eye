@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const cols = String(q.collections || 'spherex_dr1').split(',').filter(c => ALLOWED.test(c)).slice(0, 4);
     const params = cols.map(c => 'COLLECTION=' + c).join('&');
     const url = `https://irsa.ipac.caltech.edu/SIA?${params}&POS=circle+${ra}+${dec}+0.001&RESPONSEFORMAT=CSV`;
-    const rows = parseCSV(await fetchText(url));
+    const rows = parseCSV(await fetchText(url, 12000, 2));
     const seen = new Set();
     const images = [];
     for (const r of rows) {
