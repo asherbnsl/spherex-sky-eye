@@ -65,7 +65,7 @@ How each NASA resource is used (problem → what the resource provides → how i
 | **CFITSIO** (NASA HEASARC) | SPHEREx quality flags are Rice-compressed | The reference Rice (RICE_1) algorithm | Our in-browser decoder that reads per-pixel contamination flags |
 
 ## Space Agency Partner Data and Other References
-- ESA Gaia DR3 (ESA Gaia Archive).
+- ESA Gaia DR3 (ESA Gaia Archive), with NASA MAST's copy of Gaia DR3 (linked in the challenge resources) as automatic backup.
 - ESA ESASky HiPS mirrors (AllWISE, 2MASS) for the sky globe; CSIRO CASDA DSS2 mirror.
 - CDS Strasbourg: SPHEREx all-sky HiPS maps, Aladin Lite v3, Sesame name resolver, 2MASS/DSS2 HiPS.
 - God's Eye View by Bilawal Sidhu (MIT) — UI design inspiration only, no code reused.

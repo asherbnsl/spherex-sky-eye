@@ -109,7 +109,7 @@ test/run.mjs             unit tests
 * unWISE coadds of NASA WISE data (Lang 2014; Meisner, Lang & Schlegel 2017), via the unwise.me cutout service, used for the WISE 2010 frame.
 
 **Space agency partner data**
-* ESA Gaia DR3 (`gaiadr3.gaia_source`, ESA Gaia Archive TAP). Gaia DR3 is also linked from the challenge via MAST.
+* ESA Gaia DR3 (`gaiadr3.gaia_source`, ESA Gaia Archive TAP), with NASA MAST's copy of Gaia DR3 (the challenge's linked resource) as automatic backup.
 * ESA ESASky HiPS mirrors (AllWISE, 2MASS colour) for the sky globe.
 
 **Other resources**
