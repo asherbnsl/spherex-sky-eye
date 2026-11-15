@@ -144,3 +144,6 @@ body.simple #left { bottom: 10px; }
 #sky .aladin-location, #sky .aladin-fov, #sky .aladin-logo-container,
 #sky .aladin-status-bar, #sky .aladin-tooltip-container, #sky .aladin-stack-control,
 #sky .aladin-settings-control, #sky .aladin-share-control { display: none !important; }
+
+#credits .maker { color: #cfeaf5; font-weight: 600; letter-spacing: .04em; }
+#credits .maker a { color: var(--amber); }
