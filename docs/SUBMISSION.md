@@ -70,7 +70,7 @@ How each NASA resource is used (problem → what the resource provides → how i
 - CDS Strasbourg: SPHEREx all-sky HiPS maps, Aladin Lite v3, Sesame name resolver, 2MASS/DSS2 HiPS.
 - God's Eye View by Bilawal Sidhu (MIT) — UI design inspiration only, no code reused.
 - Google Fonts: JetBrains Mono, Orbitron (OFL).
-- Tools: Node.js, Vercel (hosting and serverless functions), GitHub, jsDelivr CDN; astropy (used only to create a test file for the flag decoder); Google Chrome headless (rendering the backup slide deck).
+- Tools: Node.js, Vercel (hosting and serverless functions), GitHub, jsDelivr CDN; astropy (used only to create a test file for the flag decoder).
 - unWISE: Lang (2014); Meisner, Lang & Schlegel (2017).
 
 ## Use of Super Intelligence (SI)
