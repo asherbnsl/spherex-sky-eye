@@ -782,7 +782,7 @@ function copy(text, msg) {
 }
 
 window.addEventListener('error', e => log('Unexpected error: ' + (e.message || 'unknown'), 'err'));
-window.addEventListener('unhandledrejection', e => log('Unexpected error: ' + ((e.reason && e.reason.message) || 'request failed'), 'err'));
+window.addEventListener('unhandledrejection', e => { const m = (e.reason && e.reason.message) || ''; if (/fetch|abort|network/i.test(m)) return; log('Unexpected error: ' + (m || 'request failed'), 'err'); });
 
 // exposed for debugging from the browser console
 window.BLINKSCOPE = { state, SX, CONFIG };

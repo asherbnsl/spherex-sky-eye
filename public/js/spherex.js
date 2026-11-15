@@ -34,6 +34,7 @@ export async function searchImages(ra, dec, presetKey) {
   // Live archive first. For the challenge targets, if IRSA hasn't answered
   // within 6 s (or fails), use the saved listing so the demo never stalls.
   const live = liveSearch(ra, dec);
+  live.catch(() => { /* handled below or superseded by the saved listing */ });
   const snapP = presetKey ? fromSnapshot(presetKey) : Promise.resolve(null);
   const useSnap = async () => { const s = await snapP; if (s) { s.fromSnapshot = true; return s; } return null; };
   if (presetKey) {
