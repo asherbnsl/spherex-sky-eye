@@ -6,6 +6,8 @@
 
 Opens on Barnard's Star with a 30-second guided tour. No install, no login.
 
+▶ **30-second demo video:** https://youtu.be/_S3L5-DITko
+
 Pluto was found in 1930 by flipping between two photographs of the same patch of sky on a *blink comparator* and noticing one dot that moved. BLINKSCOPE does the same thing with NASA's SPHEREx all-sky infrared survey, in a browser, for any position you type.
 
 Enter an object name or coordinates. BLINKSCOPE finds every SPHEREx exposure that covers that spot, reads only the small patch around it from NASA's public SPHEREx archive, aligns the patches north-up and plays them like a short video, one frame per six-month sky pass. Anything that jumps between frames is moving.
@@ -118,12 +120,12 @@ test/run.mjs             unit tests
 * 2MASS and DSS2 HiPS (via CDS, ESA ESASky and CSIRO CASDA mirrors).
 * Fonts: JetBrains Mono, Orbitron (Google Fonts, OFL).
 * CFITSIO (NASA HEASARC): reference Rice (RICE_1) compression algorithm, ported for the flags decoder.
-* Tools: Node.js, Vercel, GitHub, jsDelivr; astropy (creating the decoder's test file only); headless Chrome (backup slide deck).
+* Tools: Node.js, Vercel, GitHub, jsDelivr; astropy (creating the decoder's test file only).
 * UI design language (tactical HUD, sensor "looks", event log, shareable view links) inspired by **God's Eye View** by Bilawal Sidhu (MIT License, https://github.com/bilawalsidhu/gods-eye-view). No code from that project is included.
 
 ## AI assistance (disclosure)
 
-The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README, to assemble the backup slide deck from real app screenshots, and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. Every source file starts with an SI-disclosure line, and the web page carries an `ai-assistance` meta tag. No AI-generated imagery, video or audio is used; every sky image is real NASA/ESA data.
+The project concept (a God's-Eye-View-style viewer for SPHEREx), feature choices, target selection and testing direction are by Team Shrapnel (Arsh Bansal). An AI coding assistant (Claude, by Anthropic) was used to write and debug much of the code and this README and it suggested the project name and some feature ideas. All AI-assisted code was reviewed and tested by the team. Every source file starts with an SI-disclosure line, and the web page carries an `ai-assistance` meta tag. No AI-generated imagery, video or audio is used; every sky image is real NASA/ESA data.
 
 ## Licence
 
