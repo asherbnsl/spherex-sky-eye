@@ -264,9 +264,13 @@ async function engage(input) {
     await download(token);
   } catch (e) {
     if (token !== state.token) return;
-    log('ERROR ▸ ' + e.message, 'err');
-    setProgress(0, e.message);
-    $('#fb-empty').textContent = e.message;
+    const down = e.archiveDown || e.name === 'AbortError' || /fetch/i.test(e.message);
+    const msg = down
+      ? "NASA's SPHEREx archive search is temporarily unavailable, so new searches can't run right now. The five challenge targets still work (Barnard's Star, Epsilon Indi B, WISE 0855, RW Aurigae, R Draconis); please try this one again in a few minutes."
+      : e.message;
+    log('ERROR ▸ ' + (down ? 'archive search unavailable' : e.message), 'err');
+    setProgress(0, down ? 'archive search unavailable · try a challenge target' : e.message);
+    $('#fb-empty').textContent = msg;
   }
 }
 
@@ -776,6 +780,9 @@ function flagSource() {
 function copy(text, msg) {
   navigator.clipboard?.writeText(text).then(() => log(msg, 'ok'), () => prompt('Copy:', text));
 }
+
+window.addEventListener('error', e => log('Unexpected error: ' + (e.message || 'unknown'), 'err'));
+window.addEventListener('unhandledrejection', e => log('Unexpected error: ' + ((e.reason && e.reason.message) || 'request failed'), 'err'));
 
 // exposed for debugging from the browser console
 window.BLINKSCOPE = { state, SX, CONFIG };

@@ -56,7 +56,7 @@ async function liveSearch(ra, dec) {
   const get = () => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000); return fetch(u, { signal: c.signal }).finally(() => clearTimeout(t)); };
   let r = await get();
   if (!r.ok) { await new Promise(res => setTimeout(res, 2000)); r = await get(); }
-  if (!r.ok) throw new Error('NASA archive search is busy (' + r.status + ') — try again in a minute');
+  if (!r.ok) { const err = new Error("NASA's SPHEREx archive search is temporarily unavailable."); err.archiveDown = true; throw err; }
   const j = await r.json();
   return j.images.sort((a, b) => a.t - b.t);
 }
